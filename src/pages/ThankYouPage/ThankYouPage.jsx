@@ -1,6 +1,6 @@
 import "./ThankYouPage.css";
 
-export default function ThankYouPage({ onBack }) {
+export default function ThankYouPage({ homeHref, onBack }) {
   return (
     <main className="thank-you-page">
       <section className="thank-you-page__content page-gutter" aria-labelledby="thank-you-heading">
@@ -13,7 +13,7 @@ export default function ThankYouPage({ onBack }) {
         </p>
         <a
           className="thank-you-page__link"
-          href="/"
+          href={homeHref}
           onClick={(event) => {
             event.preventDefault();
             onBack?.();

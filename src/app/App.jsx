@@ -10,6 +10,7 @@ import "./App.css";
 const ROUTE_TRANSITION_DURATION = 420;
 const THANK_YOU_PAGE = "thank-you";
 const LANDING_PAGE = "landing";
+const HOME_PATH = import.meta.env.BASE_URL || "/";
 
 const getPageFromHash = () => (
   window.location.hash === "#thank-you" ? THANK_YOU_PAGE : LANDING_PAGE
@@ -79,7 +80,7 @@ export default function App() {
 
   const handleThankYouExit = () => {
     if (window.location.hash) {
-      window.history.pushState(null, "", window.location.pathname);
+      window.history.pushState(null, "", HOME_PATH);
     }
 
     transitionToPage(LANDING_PAGE);
@@ -92,7 +93,7 @@ export default function App() {
       <Header />
       <div className={`app-route app-route--${transitionState}`}>
         {isThankYouPage ? (
-          <ThankYouPage onBack={handleThankYouExit} />
+          <ThankYouPage homeHref={HOME_PATH} onBack={handleThankYouExit} />
         ) : (
           <>
             <main>
