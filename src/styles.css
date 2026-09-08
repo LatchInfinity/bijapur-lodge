@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  @font-face {
+    font-family: "Inter";
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: local("Inter");
+  }
+
+  @font-face {
+    font-family: "Cormorant Garamond";
+    font-style: normal;
+    font-weight: 400 700;
+    font-display: swap;
+    src: local("Cormorant Garamond");
+  }
+
+  :root {
+    color: #f4efe5;
+    background: #11100d;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html {
+    @apply scroll-smooth bg-lodge-ink;
+  }
+
+  body {
+    @apply m-0 min-w-[320px] bg-lodge-ink font-sans text-lodge-linen;
+  }
+
+  button,
+  a {
+    @apply focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lodge-ember;
+  }
+}
+
+@layer utilities {
+  .page-gutter {
+    @apply px-4 sm:px-8 lg:px-12;
+  }
+
+  .content-width {
+    @apply mx-auto w-full max-w-7xl;
+  }
+}

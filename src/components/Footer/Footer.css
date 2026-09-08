@@ -1,0 +1,31 @@
+.site-footer {
+  @apply bg-lodge-charcoal py-12 text-lodge-linen;
+}
+
+.site-footer__inner {
+  @apply grid gap-10 border-t border-lodge-linen/10 pt-10 md:grid-cols-[1.4fr_1fr] md:items-start;
+}
+
+.site-footer__brand-block {
+  @apply max-w-xl;
+}
+
+.site-footer__brand {
+  @apply font-display text-2xl font-semibold uppercase tracking-[0.12em] text-lodge-linen no-underline sm:text-3xl sm:tracking-[0.16em];
+}
+
+.site-footer__copy {
+  @apply mt-4 max-w-md text-sm leading-7 text-lodge-linen/70;
+}
+
+.site-footer__contact {
+  @apply grid gap-3 not-italic md:justify-self-end;
+}
+
+.site-footer__contact-item {
+  @apply inline-flex items-center gap-3 text-sm text-lodge-linen/70 no-underline transition hover:text-lodge-linen;
+}
+
+.site-footer__bottom {
+  @apply mt-10 flex flex-col gap-3 border-t border-lodge-linen/10 pt-6 text-xs uppercase tracking-[0.12em] text-lodge-linen/50 sm:flex-row sm:items-center sm:justify-between sm:tracking-[0.16em];
+}

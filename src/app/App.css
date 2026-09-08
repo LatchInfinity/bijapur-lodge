@@ -1,0 +1,20 @@
+.app-shell {
+  @apply min-h-screen bg-lodge-ink text-lodge-linen;
+  overflow-x: clip;
+}
+
+.app-route {
+  @apply min-h-[100svh] opacity-100;
+  transition: opacity 420ms ease;
+}
+
+.app-route--entering,
+.app-route--exiting {
+  @apply opacity-0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-route {
+    transition: none;
+  }
+}

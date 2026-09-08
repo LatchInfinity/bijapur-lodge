@@ -1,0 +1,43 @@
+.thank-you-page {
+  @apply grid min-h-[100svh] place-items-center bg-lodge-ink pb-12 pt-24 text-lodge-linen sm:pb-16;
+}
+
+.thank-you-page__content {
+  @apply mx-auto w-full max-w-4xl text-center;
+  animation: thank-you-content-enter 700ms ease both;
+}
+
+.thank-you-page__eyebrow {
+  @apply text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-lodge-stone/70 sm:text-xs sm:tracking-[0.18em];
+}
+
+.thank-you-page__title {
+  @apply mt-4 font-display text-5xl font-normal uppercase leading-none text-lodge-linen sm:mt-5 sm:text-8xl;
+  font-family: "Cormorant Garamond", Georgia, serif;
+}
+
+.thank-you-page__copy {
+  @apply mx-auto mt-4 max-w-xl text-base leading-7 text-lodge-linen/75 sm:mt-5 sm:text-lg sm:leading-8;
+}
+
+.thank-you-page__link {
+  @apply mt-7 inline-flex min-h-12 w-full max-w-xs items-center justify-center rounded-md border border-lodge-linen/20 px-5 text-center text-xs font-semibold uppercase tracking-[0.12em] text-lodge-linen no-underline transition hover:bg-lodge-linen hover:text-lodge-ink sm:mt-8 sm:w-auto sm:max-w-none sm:px-6 sm:text-sm sm:tracking-[0.14em];
+}
+
+@keyframes thank-you-content-enter {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thank-you-page__content {
+    animation: none;
+  }
+}

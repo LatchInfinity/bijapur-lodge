@@ -1,0 +1,34 @@
+.hero-banner {
+  @apply relative z-10 bg-lodge-ink;
+  height: var(--hero-scroll-height);
+}
+
+.hero-banner__sticky {
+  @apply sticky top-0 h-[100svh] min-h-[100svh] overflow-hidden bg-lodge-ink;
+}
+
+.hero-banner__hook {
+  @apply pointer-events-none absolute inset-0 z-10 grid place-items-center px-5 text-center opacity-100 transition-opacity duration-300 ease-out;
+}
+
+.hero-banner__hook p {
+  @apply max-w-4xl font-display text-5xl font-semibold uppercase leading-[0.9] text-lodge-linen sm:text-7xl lg:text-8xl xl:text-[9rem];
+  text-shadow: 0 16px 56px rgba(0, 0, 0, 0.58);
+}
+
+.hero-banner__hook em,
+.hero-banner__hook span {
+  @apply font-display font-normal italic;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-style: italic;
+}
+
+.hero-banner__end-fade {
+  @apply pointer-events-none absolute inset-0 z-20 bg-black opacity-0 transition-opacity duration-300 ease-linear;
+}
+
+@media (max-width: 640px) {
+  .hero-banner {
+    height: var(--hero-scroll-height-mobile);
+  }
+}

@@ -1,0 +1,20 @@
+.site-header {
+  @apply fixed left-0 right-0 top-0 z-50 py-3 transition-all duration-300 sm:py-4;
+}
+
+.site-header--scrolled {
+  @apply bg-lodge-ink/80 py-2 shadow-header backdrop-blur-xl sm:py-3;
+}
+
+.site-header__inner {
+  @apply flex items-center;
+}
+
+.site-header__brand {
+  @apply inline-flex min-w-0 items-center text-lodge-linen no-underline;
+}
+
+.site-header__brand-text {
+  @apply whitespace-nowrap font-display text-xl font-normal uppercase tracking-[0.12em] sm:text-2xl sm:tracking-[0.18em];
+  font-family: "Cormorant Garamond", Georgia, serif;
+}

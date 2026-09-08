@@ -1,0 +1,43 @@
+.lodge-showcase {
+  @apply relative bg-black;
+  height: var(--lodge-showcase-height);
+}
+
+.lodge-showcase__sticky {
+  @apply sticky top-0 h-[100svh] min-h-[100svh] overflow-hidden bg-black;
+}
+
+.lodge-showcase__header {
+  @apply pointer-events-none absolute left-0 right-0 top-0 z-10 pt-20 sm:pt-24;
+}
+
+.lodge-showcase__header p {
+  @apply font-display text-xl font-normal uppercase leading-none tracking-[0.08em] text-lodge-linen/75 sm:text-3xl sm:tracking-[0.1em] lg:text-4xl;
+  font-family: "Cormorant Garamond", Georgia, serif;
+}
+
+.lodge-showcase__viewport {
+  @apply h-full w-full overflow-hidden;
+}
+
+.lodge-showcase__track {
+  @apply flex h-full w-max items-center gap-4 px-4 pb-8 pt-16 will-change-transform sm:gap-7 sm:px-8 sm:pb-0 sm:pt-20 lg:gap-9 lg:px-12;
+}
+
+.lodge-showcase__card {
+  @apply relative h-[62svh] min-h-[22rem] w-[84vw] shrink-0 overflow-hidden rounded-lg bg-lodge-charcoal sm:h-[72svh] sm:min-h-0 sm:w-[58vw] lg:w-[42vw] xl:w-[36vw];
+}
+
+.lodge-showcase__image {
+  @apply h-full w-full object-cover transition duration-700 ease-out;
+}
+
+.lodge-showcase__card:hover .lodge-showcase__image {
+  @apply scale-[1.035];
+}
+
+@media (max-width: 640px) {
+  .lodge-showcase {
+    height: var(--lodge-showcase-height-mobile);
+  }
+}
