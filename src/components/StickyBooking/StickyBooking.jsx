@@ -4,6 +4,7 @@ import "./StickyBooking.css";
 const getDigitsOnly = (value) => value.replace(/\D/g, "");
 const getPhoneValue = (value) => getDigitsOnly(value).slice(0, 10);
 const getNameValue = (value) => value.replace(/[0-9]/g, "");
+const MOBILE_BOOKING_QUERY = "(max-width: 639px)";
 const formatIndianDate = (value) => {
   if (!value) {
     return "dd/mm/yyyy";
@@ -17,6 +18,7 @@ const formatIndianDate = (value) => {
 export default function StickyBooking({ onBookingComplete }) {
   const startDateInputRef = useRef(null);
   const endDateInputRef = useRef(null);
+  const openScrollPositionRef = useRef(0);
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -57,6 +59,11 @@ export default function StickyBooking({ onBookingComplete }) {
     }
   };
 
+  const handleOpenBooking = () => {
+    openScrollPositionRef.current = window.scrollY;
+    setIsOpen(true);
+  };
+
   useEffect(() => {
     const footer = document.getElementById("contact");
 
@@ -79,6 +86,25 @@ export default function StickyBooking({ onBookingComplete }) {
     };
   }, []);
 
+  useEffect(() => {
+    if (!isOpen) {
+      return undefined;
+    }
+
+    const mobileQuery = window.matchMedia(MOBILE_BOOKING_QUERY);
+    const closeOnMobileScroll = () => {
+      const hasScrolled = Math.abs(window.scrollY - openScrollPositionRef.current) > 2;
+
+      if (mobileQuery.matches && hasScrolled) {
+        setIsOpen(false);
+      }
+    };
+
+    window.addEventListener("scroll", closeOnMobileScroll, { passive: true });
+
+    return () => window.removeEventListener("scroll", closeOnMobileScroll);
+  }, [isOpen]);
+
   const handleSubmit = (event) => {
     event.preventDefault();
 
@@ -99,7 +125,7 @@ export default function StickyBooking({ onBookingComplete }) {
       <button
         className="sticky-booking__launcher"
         type="button"
-        onClick={() => setIsOpen(true)}
+        onClick={handleOpenBooking}
       >
         Book Now
       </button>
