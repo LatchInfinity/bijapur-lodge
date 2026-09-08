@@ -9,7 +9,7 @@ export default function Footer() {
             Bijapur Lodge
           </a>
           <p className="site-footer__copy">
-            A composed landing page foundation for a nature-led lodge experience.
+            Where rocky trails, open skies, and quiet stays meet nature.
           </p>
         </div>
 
