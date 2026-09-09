@@ -26,8 +26,9 @@ export const HERO_FRAME_SEQUENCE = {
   decodedFrameCacheLimit: 45,
   introHookAccent: "Where Nature",
   introHookRest: "Slows Time",
-  introHookVisibleUntilFrame: 8,
-  introHookFadeOutByFrame: 10,
+  introHookVisibleUntilFrame: 0,
+  introHookFadeOutByFrame: 1,
+  endFadeStartProgress: 0.92,
   endFadeFrameCount: 28,
 };
 

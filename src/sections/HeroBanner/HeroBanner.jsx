@@ -5,6 +5,8 @@ import "./HeroBanner.css";
 
 const smoothStep = (value) => value * value * (3 - 2 * value);
 
+const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
 const getIntroHookOpacity = (frameProgress) => {
   const holdFrame = HERO_FRAME_SEQUENCE.introHookVisibleUntilFrame;
   const fadeEndFrame = HERO_FRAME_SEQUENCE.introHookFadeOutByFrame;
@@ -24,13 +26,16 @@ const getIntroHookOpacity = (frameProgress) => {
 
 const getEndFadeOpacity = (frameProgress, frameCount) => {
   const finalFrame = Math.max(frameCount - 1, 1);
-  const fadeStartFrame = Math.max(finalFrame - HERO_FRAME_SEQUENCE.endFadeFrameCount, 0);
+  const endFadeStartProgress = Number(HERO_FRAME_SEQUENCE.endFadeStartProgress);
+  const fadeStartFrame = Number.isFinite(endFadeStartProgress)
+    ? finalFrame * clamp(endFadeStartProgress, 0, 0.99)
+    : Math.max(finalFrame - HERO_FRAME_SEQUENCE.endFadeFrameCount, 0);
 
   if (frameProgress <= fadeStartFrame) {
     return 0;
   }
 
-  return smoothStep((frameProgress - fadeStartFrame) / (finalFrame - fadeStartFrame));
+  return smoothStep((frameProgress - fadeStartFrame) / Math.max(finalFrame - fadeStartFrame, 0.001));
 };
 
 export default function HeroBanner() {
