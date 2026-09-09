@@ -33,6 +33,10 @@
   left: -9999px;
 }
 
+.sticky-booking__close {
+  @apply hidden;
+}
+
 .sticky-booking__field label {
   @apply text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-lodge-ink/55;
 }
@@ -131,6 +135,10 @@
 }
 
 @media (max-width: 639px) {
+  .sticky-booking__close {
+    @apply ml-auto flex h-10 w-10 items-center justify-center rounded-md border border-lodge-ink/15 bg-lodge-linen/45 text-sm font-semibold text-lodge-ink transition hover:bg-[#F4EBE6];
+  }
+
   .sticky-booking--open .sticky-booking__panel {
     overflow-y: auto;
     overscroll-behavior: contain;
