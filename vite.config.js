@@ -10,7 +10,13 @@ export default defineConfig({
   plugins: [react()],
   server: {
     watch: {
-      ignored: ["**/assets/**/*.mp4", "**/public/**/*.mp4", "**/*.crdownload"],
+      ignored: [
+        "**/assets/**/*.mp4",
+        "**/assets/**/*.webm",
+        "**/public/**/*.mp4",
+        "**/public/**/*.webm",
+        "**/*.crdownload",
+      ],
     },
   },
 });

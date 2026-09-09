@@ -4,6 +4,68 @@ import "./ScrollVideo.css";
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
+const getFallbackSource = (config) => ({
+  src: config.fallbackSrc || config.src,
+  type: config.fallbackType || config.type || "video/mp4",
+});
+
+const canUseBlobSource = (useBlobSource) => (
+  useBlobSource
+  && "fetch" in window
+  && "URL" in window
+  && "Blob" in window
+);
+
+const canUseEnhancedSource = ({ enhancedSrc, enhancedType, upgradeToEnhancedSource }) => {
+  if (!upgradeToEnhancedSource || !enhancedSrc || !enhancedType) {
+    return false;
+  }
+
+  const probeVideo = document.createElement("video");
+  return Boolean(probeVideo.canPlayType(enhancedType));
+};
+
+const loadVideoBlob = async ({ src, type, signal, onProgress }) => {
+  const response = await window.fetch(src, {
+    cache: "force-cache",
+    credentials: "same-origin",
+    signal,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Video request failed with ${response.status}`);
+  }
+
+  const totalBytes = Number(response.headers.get("content-length")) || 0;
+
+  if (response.body && totalBytes > 0) {
+    const reader = response.body.getReader();
+    const chunks = [];
+    let receivedBytes = 0;
+    let isReading = true;
+
+    while (isReading) {
+      const { done, value } = await reader.read();
+
+      if (done) {
+        isReading = false;
+        continue;
+      }
+
+      chunks.push(value);
+      receivedBytes += value.byteLength;
+      onProgress?.(clamp(receivedBytes / totalBytes, 0.08, 0.98));
+    }
+
+    return window.URL.createObjectURL(new window.Blob(chunks, { type }));
+  }
+
+  const fetchedBlob = await response.blob();
+  const videoBlob = fetchedBlob.type ? fetchedBlob : new window.Blob([fetchedBlob], { type });
+
+  return window.URL.createObjectURL(videoBlob);
+};
+
 export default function ScrollVideo({
   config = HERO_SCROLL_VIDEO,
   onProgressChange,
@@ -15,7 +77,9 @@ export default function ScrollVideo({
   const seekTimeoutRef = useRef(null);
   const lastSeekAtRef = useRef(0);
   const targetProgressRef = useRef(0);
-  const [videoSrc, setVideoSrc] = useState(() => (config.useBlobSource ? "" : config.src));
+  const [videoSrc, setVideoSrc] = useState(() => (
+    config.useBlobSource ? "" : getFallbackSource(config).src
+  ));
   const [isReady, setIsReady] = useState(false);
   const [loadProgress, setLoadProgress] = useState(config.useBlobSource ? 0 : 0.08);
 
@@ -142,90 +206,123 @@ export default function ScrollVideo({
   }, [updateScrollTarget]);
 
   useEffect(() => {
-    if (!config.useBlobSource || !("fetch" in window) || !("URL" in window)) {
-      setVideoSrc(config.src);
+    const fallbackSource = {
+      src: config.fallbackSrc || config.src,
+      type: config.fallbackType || config.type || "video/mp4",
+    };
+
+    if (!canUseBlobSource(config.useBlobSource)) {
+      setVideoSrc(fallbackSource.src);
       setLoadProgress(0.08);
       return undefined;
     }
 
     let isCancelled = false;
-    let objectUrl = "";
-    const abortController = new window.AbortController();
+    let fallbackObjectUrl = "";
+    let enhancedObjectUrl = "";
+    let enhancedStartTimeout = null;
+    const fallbackAbortController = new window.AbortController();
+    const enhancedAbortController = new window.AbortController();
 
-    const loadVideoBlob = async () => {
+    const loadFallbackVideo = async () => {
       setIsReady(false);
       setVideoSrc("");
       setLoadProgress(0.04);
 
       try {
-        const response = await window.fetch(config.src, {
-          cache: "force-cache",
-          credentials: "same-origin",
-          signal: abortController.signal,
-        });
-
-        if (!response.ok) {
-          throw new Error(`Video request failed with ${response.status}`);
-        }
-
-        const totalBytes = Number(response.headers.get("content-length")) || 0;
-        let videoBlob;
-
-        if (response.body && totalBytes > 0) {
-          const reader = response.body.getReader();
-          const chunks = [];
-          let receivedBytes = 0;
-          let isReading = true;
-
-          while (isReading) {
-            const { done, value } = await reader.read();
-
-            if (done) {
-              isReading = false;
-              continue;
-            }
-
-            chunks.push(value);
-            receivedBytes += value.length;
-
+        fallbackObjectUrl = await loadVideoBlob({
+          src: fallbackSource.src,
+          type: fallbackSource.type,
+          signal: fallbackAbortController.signal,
+          onProgress: (progress) => {
             if (!isCancelled) {
-              setLoadProgress(clamp(receivedBytes / totalBytes, 0.08, 0.98));
+              setLoadProgress(progress);
             }
-          }
-
-          videoBlob = new window.Blob(chunks, { type: config.type });
-        } else {
-          videoBlob = await response.blob();
-        }
+          },
+        });
 
         if (isCancelled) {
           return;
         }
 
-        objectUrl = window.URL.createObjectURL(videoBlob);
-        setVideoSrc(objectUrl);
+        setVideoSrc(fallbackObjectUrl);
         setLoadProgress(1);
       } catch (error) {
         if (isCancelled || error?.name === "AbortError") {
           return;
         }
 
-        setVideoSrc(config.src);
+        setVideoSrc(fallbackSource.src);
         setLoadProgress(0.08);
       }
     };
 
-    loadVideoBlob();
+    const loadEnhancedVideo = async () => {
+      if (!canUseEnhancedSource({
+        enhancedSrc: config.enhancedSrc,
+        enhancedType: config.enhancedType,
+        upgradeToEnhancedSource: config.upgradeToEnhancedSource,
+      })) {
+        return;
+      }
+
+      try {
+        enhancedObjectUrl = await loadVideoBlob({
+          src: config.enhancedSrc,
+          type: config.enhancedType,
+          signal: enhancedAbortController.signal,
+        });
+
+        if (!isCancelled) {
+          setVideoSrc(enhancedObjectUrl);
+        }
+      } catch (error) {
+        if (error?.name !== "AbortError") {
+          enhancedObjectUrl = "";
+        }
+      }
+    };
+
+    const loadVideoSources = async () => {
+      await loadFallbackVideo();
+
+      if (isCancelled) {
+        return;
+      }
+
+      enhancedStartTimeout = window.setTimeout(
+        loadEnhancedVideo,
+        Math.max(Number(config.enhancedStartDelay) || 0, 0),
+      );
+    };
+
+    loadVideoSources();
 
     return () => {
       isCancelled = true;
-      abortController.abort();
+      fallbackAbortController.abort();
+      enhancedAbortController.abort();
+      window.clearTimeout(enhancedStartTimeout);
 
-      if (objectUrl) {
-        window.URL.revokeObjectURL(objectUrl);
+      if (fallbackObjectUrl) {
+        window.URL.revokeObjectURL(fallbackObjectUrl);
+      }
+
+      if (enhancedObjectUrl) {
+        window.URL.revokeObjectURL(enhancedObjectUrl);
       }
     };
-  }, [config.src, config.type, config.useBlobSource]);
+  }, [
+    config.enhancedSrc,
+    config.enhancedStartDelay,
+    config.enhancedType,
+    config.fallbackSrc,
+    config.fallbackType,
+    config.src,
+    config.type,
+    config.upgradeToEnhancedSource,
+    config.useBlobSource,
+  ]);
 
   useEffect(() => {
     const video = videoRef.current;

@@ -1,8 +1,16 @@
-const upscaledVideoUrl = `${import.meta.env.BASE_URL}media/upscaled-video-scrub-intra.mp4`;
+const heroMediaBaseUrl = `${import.meta.env.BASE_URL}media/`;
+const previewVideoUrl = `${heroMediaBaseUrl}upscaled-video-scrub-preview.mp4`;
+const enhancedVideoUrl = `${heroMediaBaseUrl}upscaled-video-scrub.webm`;
 
 export const HERO_SCROLL_VIDEO = {
-  src: upscaledVideoUrl,
+  src: previewVideoUrl,
   type: "video/mp4",
+  fallbackSrc: previewVideoUrl,
+  fallbackType: "video/mp4",
+  enhancedSrc: enhancedVideoUrl,
+  enhancedType: 'video/webm; codecs="vp9"',
+  upgradeToEnhancedSource: true,
+  enhancedStartDelay: 650,
   preload: "auto",
   useBlobSource: true,
   animationScrollHeight: "520svh",
