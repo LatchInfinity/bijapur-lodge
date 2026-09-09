@@ -4,9 +4,30 @@ import "./ScrollVideo.css";
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
-const getFallbackSource = (config) => ({
-  src: config.fallbackSrc || config.src,
-  type: config.fallbackType || config.type || "video/mp4",
+const getUsesMobileSources = (config) => (
+  typeof window !== "undefined"
+  && "matchMedia" in window
+  && Boolean(config.mobileMediaQuery)
+  && window.matchMedia(config.mobileMediaQuery).matches
+);
+
+const getVideoSourceSet = (config, useMobileSources) => ({
+  fallback: {
+    src: useMobileSources && config.mobileFallbackSrc
+      ? config.mobileFallbackSrc
+      : config.fallbackSrc || config.src,
+    type: useMobileSources && config.mobileFallbackType
+      ? config.mobileFallbackType
+      : config.fallbackType || config.type || "video/mp4",
+  },
+  enhanced: {
+    src: useMobileSources && config.mobileEnhancedSrc
+      ? config.mobileEnhancedSrc
+      : config.enhancedSrc,
+    type: useMobileSources && config.mobileEnhancedType
+      ? config.mobileEnhancedType
+      : config.enhancedType,
+  },
 });
 
 const canUseBlobSource = (useBlobSource) => (
@@ -77,8 +98,11 @@ export default function ScrollVideo({
   const seekTimeoutRef = useRef(null);
   const lastSeekAtRef = useRef(0);
   const targetProgressRef = useRef(0);
+  const [useMobileSources, setUseMobileSources] = useState(() => (
+    getUsesMobileSources(config)
+  ));
   const [videoSrc, setVideoSrc] = useState(() => (
-    config.useBlobSource ? "" : getFallbackSource(config).src
+    config.useBlobSource ? "" : getVideoSourceSet(config, getUsesMobileSources(config)).fallback.src
   ));
   const [isReady, setIsReady] = useState(false);
   const [loadProgress, setLoadProgress] = useState(config.useBlobSource ? 0 : 0.08);
@@ -206,9 +230,49 @@ export default function ScrollVideo({
   }, [updateScrollTarget]);
 
   useEffect(() => {
+    if (!config.mobileMediaQuery || !("matchMedia" in window)) {
+      setUseMobileSources(false);
+      return undefined;
+    }
+
+    const mediaQueryList = window.matchMedia(config.mobileMediaQuery);
+    const updateSourcePreference = () => {
+      setUseMobileSources(mediaQueryList.matches);
+    };
+
+    updateSourcePreference();
+
+    if ("addEventListener" in mediaQueryList) {
+      mediaQueryList.addEventListener("change", updateSourcePreference);
+    } else {
+      mediaQueryList.addListener(updateSourcePreference);
+    }
+
+    return () => {
+      if ("removeEventListener" in mediaQueryList) {
+        mediaQueryList.removeEventListener("change", updateSourcePreference);
+      } else {
+        mediaQueryList.removeListener(updateSourcePreference);
+      }
+    };
+  }, [config.mobileMediaQuery]);
+
+  useEffect(() => {
     const fallbackSource = {
-      src: config.fallbackSrc || config.src,
-      type: config.fallbackType || config.type || "video/mp4",
+      src: useMobileSources && config.mobileFallbackSrc
+        ? config.mobileFallbackSrc
+        : config.fallbackSrc || config.src,
+      type: useMobileSources && config.mobileFallbackType
+        ? config.mobileFallbackType
+        : config.fallbackType || config.type || "video/mp4",
+    };
+    const enhancedSource = {
+      src: useMobileSources && config.mobileEnhancedSrc
+        ? config.mobileEnhancedSrc
+        : config.enhancedSrc,
+      type: useMobileSources && config.mobileEnhancedType
+        ? config.mobileEnhancedType
+        : config.enhancedType,
     };
 
     if (!canUseBlobSource(config.useBlobSource)) {
@@ -259,8 +323,8 @@ export default function ScrollVideo({
 
     const loadEnhancedVideo = async () => {
       if (!canUseEnhancedSource({
-        enhancedSrc: config.enhancedSrc,
-        enhancedType: config.enhancedType,
+        enhancedSrc: enhancedSource.src,
+        enhancedType: enhancedSource.type,
         upgradeToEnhancedSource: config.upgradeToEnhancedSource,
       })) {
         return;
@@ -268,8 +332,8 @@ export default function ScrollVideo({
 
       try {
         enhancedObjectUrl = await loadVideoBlob({
-          src: config.enhancedSrc,
-          type: config.enhancedType,
+          src: enhancedSource.src,
+          type: enhancedSource.type,
           signal: enhancedAbortController.signal,
         });
 
@@ -318,10 +382,15 @@ export default function ScrollVideo({
     config.enhancedType,
     config.fallbackSrc,
     config.fallbackType,
+    config.mobileEnhancedSrc,
+    config.mobileEnhancedType,
+    config.mobileFallbackSrc,
+    config.mobileFallbackType,
     config.src,
     config.type,
     config.upgradeToEnhancedSource,
     config.useBlobSource,
+    useMobileSources,
   ]);
 
   useEffect(() => {
