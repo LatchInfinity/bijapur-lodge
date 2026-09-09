@@ -10,7 +10,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     watch: {
-      ignored: ["**/assets/upscaled-video*.mp4", "**/*.crdownload"],
+      ignored: ["**/assets/**/*.mp4", "**/public/**/*.mp4", "**/*.crdownload"],
     },
   },
 });

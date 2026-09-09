@@ -1,4 +1,4 @@
-import upscaledVideoUrl from "../../assets/upscaled-video-scrub-intra.mp4?url";
+const upscaledVideoUrl = `${import.meta.env.BASE_URL}media/upscaled-video-scrub-intra.mp4`;
 
 export const HERO_SCROLL_VIDEO = {
   src: upscaledVideoUrl,

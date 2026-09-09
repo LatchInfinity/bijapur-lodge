@@ -160,6 +160,7 @@ export default function ScrollVideo({
       try {
         const response = await window.fetch(config.src, {
           cache: "force-cache",
+          credentials: "same-origin",
           signal: abortController.signal,
         });
 
