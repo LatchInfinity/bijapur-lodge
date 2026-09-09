@@ -71,6 +71,19 @@ export default function StickyBooking({ onBookingComplete }) {
     setIsOpen(true);
   };
 
+  const handleCloseBooking = () => {
+    const activeElement = document.activeElement;
+
+    if (
+      bookingRef.current?.contains(activeElement)
+      && typeof activeElement?.blur === "function"
+    ) {
+      activeElement.blur();
+    }
+
+    setIsOpen(false);
+  };
+
   useEffect(() => {
     const footer = document.getElementById("contact");
 
@@ -173,6 +186,15 @@ export default function StickyBooking({ onBookingComplete }) {
             onChange={(event) => setWebsite(event.target.value)}
           />
         </div>
+
+        <button
+          className="sticky-booking__close"
+          type="button"
+          aria-label="Close booking"
+          onClick={handleCloseBooking}
+        >
+          X
+        </button>
 
         <div className="sticky-booking__field sticky-booking__field--name">
           <label htmlFor="sticky-booking-name">Name</label>
