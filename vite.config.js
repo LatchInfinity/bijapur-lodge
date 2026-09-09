@@ -8,15 +8,4 @@ const githubPagesBase = env.VITE_BASE_PATH ?? (repositoryName ? `/${repositoryNa
 export default defineConfig({
   base: env.GITHUB_ACTIONS ? githubPagesBase : "/",
   plugins: [react()],
-  server: {
-    watch: {
-      ignored: [
-        "**/assets/**/*.mp4",
-        "**/assets/**/*.webm",
-        "**/public/**/*.mp4",
-        "**/public/**/*.webm",
-        "**/*.crdownload",
-      ],
-    },
-  },
 });

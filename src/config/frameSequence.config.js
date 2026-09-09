@@ -3,7 +3,8 @@ export const HERO_FRAME_SEQUENCE = {
   // is kept in this same config module. Change frame directory/naming here.
   frameDirectoryLabel: "/assets/pc-frames/",
   framePrefix: "frame_",
-  frameExtension: ".png",
+  frameExtension: ".jpg",
+  frameExtensions: [".jpg", ".jpeg", ".png", ".webp"],
   framePadding: 3,
   firstFrame: 1,
   totalFrames: null,
@@ -36,18 +37,53 @@ export const formatFrameFileName = (frameNumber, config = HERO_FRAME_SEQUENCE) =
   return `${config.framePrefix}${paddedNumber}${config.frameExtension}`;
 };
 
-const frameModules = import.meta.glob("../../assets/pc-frames/frame_*.png", {
-  eager: true,
-  import: "default",
-  query: "?url",
-});
+const frameModules = {
+  ...import.meta.glob("../../assets/pc-frames/frame_*.jpg", {
+    eager: true,
+    import: "default",
+    query: "?url",
+  }),
+  ...import.meta.glob("../../assets/pc-frames/frame_*.jpeg", {
+    eager: true,
+    import: "default",
+    query: "?url",
+  }),
+  ...import.meta.glob("../../assets/pc-frames/frame_*.png", {
+    eager: true,
+    import: "default",
+    query: "?url",
+  }),
+  ...import.meta.glob("../../assets/pc-frames/frame_*.webp", {
+    eager: true,
+    import: "default",
+    query: "?url",
+  }),
+};
+
+const getFrameExtensionPattern = (config = HERO_FRAME_SEQUENCE) => {
+  const extensions = config.frameExtensions?.length
+    ? config.frameExtensions
+    : [config.frameExtension];
+
+  return extensions
+    .map((extension) => extension.replace(/^\./, ""))
+    .map((extension) => extension.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .join("|");
+};
 
 const getFrameNumber = (path, config = HERO_FRAME_SEQUENCE) => {
   const escapedPrefix = config.framePrefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const escapedExtension = config.frameExtension.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const match = path.match(new RegExp(`${escapedPrefix}(\\d+)${escapedExtension}$`));
+  const extensionPattern = getFrameExtensionPattern(config);
+  const match = path.match(new RegExp(`${escapedPrefix}(\\d+)\\.(${extensionPattern})$`, "i"));
 
   return match ? Number(match[1]) : Number.MAX_SAFE_INTEGER;
+};
+
+const getFrameFileName = (path, frameNumber) => {
+  const fileExtension = path.match(/\.[a-z0-9]+$/i)?.[0] || HERO_FRAME_SEQUENCE.frameExtension;
+  const paddedNumber = String(frameNumber).padStart(HERO_FRAME_SEQUENCE.framePadding, "0");
+
+  return `${HERO_FRAME_SEQUENCE.framePrefix}${paddedNumber}${fileExtension}`;
 };
 
 const discoveredFrames = Object.entries(frameModules)
@@ -56,7 +92,7 @@ const discoveredFrames = Object.entries(frameModules)
 
     return {
       frameNumber,
-      fileName: formatFrameFileName(frameNumber),
+      fileName: getFrameFileName(path, frameNumber),
       url,
     };
   })
