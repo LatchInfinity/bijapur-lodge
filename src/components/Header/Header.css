@@ -1,9 +1,13 @@
 .site-header {
-  @apply fixed left-0 right-0 top-0 z-50 py-3 transition-all duration-300 sm:py-4;
+  @apply fixed left-0 right-0 top-0 z-50 bg-[#E0D5CE]/80 py-3 shadow-header backdrop-blur-xl transition-all duration-300 sm:py-4;
 }
 
 .site-header--scrolled {
-  @apply bg-lodge-ink/80 py-2 shadow-header backdrop-blur-xl sm:py-3;
+  @apply py-2 sm:py-3;
+}
+
+.site-header--scrolled .site-header__brand {
+  @apply text-lodge-ink;
 }
 
 .site-header__inner {
@@ -11,10 +15,14 @@
 }
 
 .site-header__brand {
-  @apply inline-flex min-w-0 items-center text-lodge-linen no-underline;
+  @apply inline-flex min-w-0 items-center text-lodge-ink no-underline;
 }
 
 .site-header__brand-text {
-  @apply whitespace-nowrap font-display text-xl font-normal uppercase tracking-[0.12em] sm:text-2xl sm:tracking-[0.18em];
-  font-family: "Cormorant Garamond", Georgia, serif;
+  @apply whitespace-nowrap text-2xl font-normal uppercase sm:text-3xl;
+  font-family: "EPILONION SERIF DEMO", "Cormorant Garamond", Georgia, serif;
+  font-feature-settings: "liga" 1, "dlig" 1, "calt" 1;
+  font-variant-ligatures: common-ligatures discretionary-ligatures contextual;
+  letter-spacing: 0;
+  line-height: 0.85;
 }

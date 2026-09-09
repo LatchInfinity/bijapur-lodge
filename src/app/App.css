@@ -1,5 +1,5 @@
 .app-shell {
-  @apply min-h-screen bg-lodge-ink text-lodge-linen;
+  @apply min-h-screen bg-[#F4EBE6] text-lodge-ink;
   overflow-x: clip;
 }
 

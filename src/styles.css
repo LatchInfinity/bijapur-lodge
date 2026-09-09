@@ -19,9 +19,20 @@
     src: local("Cormorant Garamond");
   }
 
+  @font-face {
+    font-family: "EPILONION SERIF DEMO";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src:
+      local("EPILONION SERIF DEMO"),
+      url("https://db.onlinewebfonts.com/t/30df2e061bac263306b25c382d7fe6fd.woff2") format("woff2"),
+      url("https://db.onlinewebfonts.com/t/30df2e061bac263306b25c382d7fe6fd.woff") format("woff");
+  }
+
   :root {
-    color: #f4efe5;
-    background: #11100d;
+    color: #11100d;
+    background: #F4EBE6;
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
@@ -29,11 +40,11 @@
   }
 
   html {
-    @apply scroll-smooth bg-lodge-ink;
+    @apply scroll-smooth bg-[#F4EBE6];
   }
 
   body {
-    @apply m-0 min-w-[320px] bg-lodge-ink font-sans text-lodge-linen;
+    @apply m-0 min-w-[320px] bg-[#F4EBE6] font-sans text-lodge-ink;
   }
 
   button,

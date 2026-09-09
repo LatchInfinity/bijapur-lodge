@@ -20,9 +20,7 @@ export default function Footer() {
           <a className="site-footer__contact-item" href="mailto:stay@bijapurlodge.com">
             <span>stay@bijapurlodge.com</span>
           </a>
-          <span className="site-footer__contact-item">
-            <span>Bijapur Lodge</span>
-          </span>
+         
         </address>
       </div>
 

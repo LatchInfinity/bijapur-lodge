@@ -4,7 +4,15 @@ import "./ScrollFrames.css";
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
-const drawImageCover = (context, image, canvasWidth, canvasHeight) => {
+const smoothStep = (value) => value * value * (3 - 2 * value);
+
+const drawImageCover = (
+  context,
+  image,
+  canvasWidth,
+  canvasHeight,
+  { clearCanvas = true, opacity = 1 } = {},
+) => {
   const imageRatio = image.naturalWidth / image.naturalHeight;
   const canvasRatio = canvasWidth / canvasHeight;
   let drawWidth = canvasWidth;
@@ -22,8 +30,14 @@ const drawImageCover = (context, image, canvasWidth, canvasHeight) => {
     offsetY = (canvasHeight - drawHeight) / 2;
   }
 
-  context.clearRect(0, 0, canvasWidth, canvasHeight);
+  if (clearCanvas) {
+    context.clearRect(0, 0, canvasWidth, canvasHeight);
+  }
+
+  context.save();
+  context.globalAlpha = opacity;
   context.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
+  context.restore();
 };
 
 export default function ScrollFrames({
@@ -37,10 +51,16 @@ export default function ScrollFrames({
   const frameCacheRef = useRef(new Map());
   const loadingFramesRef = useRef(new Set());
   const loadingQueueRef = useRef([]);
+  const prefetchedFramesRef = useRef(new Set());
+  const prefetchingFramesRef = useRef(new Set());
+  const prefetchQueueRef = useRef([]);
+  const prefetchAbortControllerRef = useRef(null);
   const loadedInitialFramesRef = useRef(0);
   const targetFrameRef = useRef(0);
+  const targetFrameProgressRef = useRef(0);
   const lastReportedFrameRef = useRef(-1);
   const lastDrawnFrameRef = useRef(-1);
+  const lastDrawnFrameProgressRef = useRef(-1);
   const animationFrameRef = useRef(null);
   const isScrollTickingRef = useRef(false);
   const isMountedRef = useRef(false);
@@ -49,6 +69,29 @@ export default function ScrollFrames({
   const frameCount = frames.length;
   const initialPreloadTarget = Math.min(config.initialPreloadCount, frameCount);
   const isReady = initialPreloadTarget > 0 && loaderProgress >= 1;
+
+  const trimDecodedFrameCache = useCallback((centerFrame = targetFrameRef.current) => {
+    const cacheLimit = Number(config.decodedFrameCacheLimit);
+
+    if (!Number.isFinite(cacheLimit) || cacheLimit <= 0 || frameCacheRef.current.size <= cacheLimit) {
+      return;
+    }
+
+    const farthestFrames = Array.from(frameCacheRef.current.keys()).sort((firstFrame, secondFrame) => {
+      const distanceDifference =
+        Math.abs(secondFrame - centerFrame) - Math.abs(firstFrame - centerFrame);
+
+      return distanceDifference || secondFrame - firstFrame;
+    });
+
+    while (frameCacheRef.current.size > cacheLimit && farthestFrames.length > 0) {
+      const frameIndex = farthestFrames.shift();
+
+      if (frameIndex !== centerFrame) {
+        frameCacheRef.current.delete(frameIndex);
+      }
+    }
+  }, [config.decodedFrameCacheLimit]);
 
   const drawFrame = useCallback((frameIndex) => {
     const canvas = canvasRef.current;
@@ -66,9 +109,46 @@ export default function ScrollFrames({
 
     drawImageCover(context, image, canvas.width, canvas.height);
     lastDrawnFrameRef.current = frameIndex;
+    lastDrawnFrameProgressRef.current = frameIndex;
 
     return true;
   }, []);
+
+  const drawFrameProgress = useCallback((frameProgress) => {
+    const canvas = canvasRef.current;
+    const lowerFrame = clamp(Math.floor(frameProgress), 0, frameCount - 1);
+    const upperFrame = clamp(Math.ceil(frameProgress), 0, frameCount - 1);
+    const lowerImage = frameCacheRef.current.get(lowerFrame);
+
+    if (!canvas || !lowerImage?.complete) {
+      return false;
+    }
+
+    const context = canvas.getContext("2d");
+
+    if (!context) {
+      return false;
+    }
+
+    const blendProgress = config.frameBlendEnabled
+      ? smoothStep(clamp(frameProgress - lowerFrame, 0, 1))
+      : 0;
+    const upperImage = frameCacheRef.current.get(upperFrame);
+
+    drawImageCover(context, lowerImage, canvas.width, canvas.height);
+
+    if (upperFrame !== lowerFrame && upperImage?.complete && blendProgress > 0) {
+      drawImageCover(context, upperImage, canvas.width, canvas.height, {
+        clearCanvas: false,
+        opacity: blendProgress,
+      });
+    }
+
+    lastDrawnFrameRef.current = lowerFrame;
+    lastDrawnFrameProgressRef.current = frameProgress;
+
+    return true;
+  }, [config.frameBlendEnabled, frameCount]);
 
   const drawNearestLoadedFrame = useCallback(
     (frameIndex) => {
@@ -132,6 +212,7 @@ export default function ScrollFrames({
         }
 
         frameCacheRef.current.set(frameIndex, image);
+        prefetchedFramesRef.current.add(frameIndex);
         loadingFramesRef.current.delete(frameIndex);
 
         if (frameIndex < initialPreloadTarget) {
@@ -140,9 +221,10 @@ export default function ScrollFrames({
         }
 
         if (Math.abs(targetFrameRef.current - frameIndex) <= 1) {
-          drawFrame(frameIndex);
+          drawFrameProgress(targetFrameProgressRef.current) || drawFrame(frameIndex);
         }
 
+        trimDecodedFrameCache(targetFrameRef.current);
         pumpQueue();
       };
       image.onerror = () => {
@@ -155,7 +237,99 @@ export default function ScrollFrames({
       };
       image.src = frames[frameIndex].url;
     }
-  }, [config.maxConcurrentLoads, drawFrame, frameCount, frames, initialPreloadTarget, updateInitialLoader]);
+  }, [
+    config.maxConcurrentLoads,
+    drawFrame,
+    drawFrameProgress,
+    frameCount,
+    frames,
+    initialPreloadTarget,
+    trimDecodedFrameCache,
+    updateInitialLoader,
+  ]);
+
+  const pumpPrefetchQueue = useCallback(function pumpQueue() {
+    if (!config.prefetchAllFrames || !("fetch" in window)) {
+      return;
+    }
+
+    const concurrentLoads = Math.max(Number(config.prefetchConcurrentLoads) || 1, 1);
+
+    while (
+      prefetchingFramesRef.current.size < concurrentLoads &&
+      prefetchQueueRef.current.length > 0
+    ) {
+      const frameIndex = prefetchQueueRef.current.shift();
+
+      if (
+        frameIndex < 0 ||
+        frameIndex >= frameCount ||
+        prefetchedFramesRef.current.has(frameIndex) ||
+        prefetchingFramesRef.current.has(frameIndex)
+      ) {
+        continue;
+      }
+
+      const frame = frames[frameIndex];
+
+      if (!frame?.url) {
+        continue;
+      }
+
+      prefetchingFramesRef.current.add(frameIndex);
+
+      const requestOptions = {
+        cache: "force-cache",
+      };
+
+      if (prefetchAbortControllerRef.current?.signal) {
+        requestOptions.signal = prefetchAbortControllerRef.current.signal;
+      }
+
+      window
+        .fetch(frame.url, requestOptions)
+        .then((response) => {
+          if (response.ok) {
+            prefetchedFramesRef.current.add(frameIndex);
+          }
+        })
+        .catch(() => {
+          // The regular image loader remains the fallback if a background prefetch misses.
+        })
+        .finally(() => {
+          if (!isMountedRef.current) {
+            return;
+          }
+
+          prefetchingFramesRef.current.delete(frameIndex);
+          pumpQueue();
+        });
+    }
+  }, [config.prefetchAllFrames, config.prefetchConcurrentLoads, frameCount, frames]);
+
+  const queueFullFramePrefetch = useCallback(() => {
+    if (!config.prefetchAllFrames || !("fetch" in window)) {
+      return;
+    }
+
+    prefetchQueueRef.current = [];
+
+    for (let frameIndex = 0; frameIndex < frameCount; frameIndex += 1) {
+      if (
+        frameCacheRef.current.has(frameIndex) ||
+        loadingFramesRef.current.has(frameIndex) ||
+        loadingQueueRef.current.includes(frameIndex) ||
+        prefetchedFramesRef.current.has(frameIndex) ||
+        prefetchingFramesRef.current.has(frameIndex)
+      ) {
+        continue;
+      }
+
+      prefetchQueueRef.current.push(frameIndex);
+    }
+
+    pumpPrefetchQueue();
+  }, [config.prefetchAllFrames, frameCount, pumpPrefetchQueue]);
 
   const requestFrame = useCallback(
     (frameIndex) => {
@@ -202,9 +376,10 @@ export default function ScrollFrames({
     if (canvas.width !== width || canvas.height !== height) {
       canvas.width = width;
       canvas.height = height;
-      drawNearestLoadedFrame(targetFrameRef.current);
+      drawFrameProgress(targetFrameProgressRef.current) ||
+        drawNearestLoadedFrame(targetFrameRef.current);
     }
-  }, [drawNearestLoadedFrame]);
+  }, [drawFrameProgress, drawNearestLoadedFrame]);
 
   const updateScrollTarget = useCallback(() => {
     const container = scrollContainerRef.current;
@@ -218,7 +393,9 @@ export default function ScrollFrames({
     const progress = clamp(-rect.top / scrollableDistance, 0, 1);
     const frameProgress = progress * (frameCount - 1);
     const nextFrame = clamp(Math.floor(frameProgress), 0, frameCount - 1);
+    const blendFrame = clamp(Math.ceil(frameProgress), 0, frameCount - 1);
 
+    targetFrameProgressRef.current = frameProgress;
     targetFrameRef.current = nextFrame;
     onFrameProgressChange?.(frameProgress, frames[nextFrame]);
 
@@ -228,11 +405,13 @@ export default function ScrollFrames({
     }
 
     requestFrameWindow(nextFrame);
+    requestFrame(blendFrame);
   }, [
     frameCount,
     frames,
     onFrameChange,
     onFrameProgressChange,
+    requestFrame,
     requestFrameWindow,
     scrollContainerRef,
   ]);
@@ -255,24 +434,18 @@ export default function ScrollFrames({
     }
 
     isMountedRef.current = true;
+    const frameCache = frameCacheRef.current;
+    const loadingFrames = loadingFramesRef.current;
+    const prefetchedFrames = prefetchedFramesRef.current;
+    const prefetchingFrames = prefetchingFramesRef.current;
 
     // Load the opening frames first so the canvas never begins blank.
     for (let frameIndex = 0; frameIndex < initialPreloadTarget; frameIndex += 1) {
       requestFrame(frameIndex);
     }
 
-    // Warm sparse frames in the background without decoding the full sequence at once.
-    const queueBackgroundFrames = () => {
-      const preloadStep = Math.max(config.backgroundPreloadStep, 1);
-
-      for (let frameIndex = 0; frameIndex < frameCount; frameIndex += preloadStep) {
-        requestFrame(frameIndex);
-      }
-    };
-    const idleCallbackId =
-      "requestIdleCallback" in window
-        ? window.requestIdleCallback(queueBackgroundFrames, { timeout: 1400 })
-        : window.setTimeout(queueBackgroundFrames, 900);
+    prefetchAbortControllerRef.current =
+      "AbortController" in window ? new window.AbortController() : null;
 
     requestFrameWindow(0);
     resizeCanvas();
@@ -286,14 +459,16 @@ export default function ScrollFrames({
       window.removeEventListener("resize", resizeCanvas);
       window.removeEventListener("scroll", queueScrollUpdate);
 
-      if ("cancelIdleCallback" in window) {
-        window.cancelIdleCallback(idleCallbackId);
-      } else {
-        window.clearTimeout(idleCallbackId);
-      }
+      prefetchAbortControllerRef.current?.abort();
+      prefetchAbortControllerRef.current = null;
+      frameCache.clear();
+      loadingFrames.clear();
+      loadingQueueRef.current = [];
+      prefetchedFrames.clear();
+      prefetchQueueRef.current = [];
+      prefetchingFrames.clear();
     };
   }, [
-    config.backgroundPreloadStep,
     frameCount,
     initialPreloadTarget,
     queueScrollUpdate,
@@ -304,16 +479,42 @@ export default function ScrollFrames({
   ]);
 
   useEffect(() => {
+    if (!isReady || !frameCount || !config.prefetchAllFrames) {
+      return undefined;
+    }
+
+    const timerId = window.setTimeout(
+      queueFullFramePrefetch,
+      Math.max(Number(config.prefetchStartDelay) || 0, 0),
+    );
+
+    return () => {
+      window.clearTimeout(timerId);
+    };
+  }, [
+    config.prefetchAllFrames,
+    config.prefetchStartDelay,
+    frameCount,
+    isReady,
+    queueFullFramePrefetch,
+  ]);
+
+  useEffect(() => {
     if (!frameCount) {
       return undefined;
     }
 
     const animate = () => {
-      const targetFrame = clamp(targetFrameRef.current, 0, frameCount - 1);
+      const targetFrameProgress = clamp(targetFrameProgressRef.current, 0, frameCount - 1);
+      const targetFrame = clamp(Math.floor(targetFrameProgress), 0, frameCount - 1);
+      const progressDelta = Math.abs(
+        targetFrameProgress - lastDrawnFrameProgressRef.current,
+      );
+      const redrawThreshold = Math.max(Number(config.frameBlendProgressThreshold) || 0, 0);
 
       // The frame is attached directly to scroll position; RAF only batches the canvas draw.
-      if (targetFrame !== lastDrawnFrameRef.current) {
-        drawNearestLoadedFrame(targetFrame);
+      if (targetFrame !== lastDrawnFrameRef.current || progressDelta >= redrawThreshold) {
+        drawFrameProgress(targetFrameProgress) || drawNearestLoadedFrame(targetFrame);
       }
 
       animationFrameRef.current = window.requestAnimationFrame(animate);
@@ -326,7 +527,7 @@ export default function ScrollFrames({
         window.cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [drawNearestLoadedFrame, frameCount]);
+  }, [config.frameBlendProgressThreshold, drawFrameProgress, drawNearestLoadedFrame, frameCount]);
 
   return (
     <div className="scroll-frames" aria-hidden="true">

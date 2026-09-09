@@ -1,9 +1,9 @@
 .site-footer {
-  @apply bg-lodge-charcoal py-12 text-lodge-linen;
+  @apply bg-[#E0D5CE] py-12 text-lodge-ink;
 }
 
 .site-footer__inner {
-  @apply grid gap-10 border-t border-lodge-linen/10 pt-10 md:grid-cols-[1.4fr_1fr] md:items-start;
+  @apply grid gap-10 border-t border-lodge-ink/10 pt-10 md:grid-cols-[1.4fr_1fr] md:items-start;
 }
 
 .site-footer__brand-block {
@@ -11,11 +11,16 @@
 }
 
 .site-footer__brand {
-  @apply font-display text-2xl font-semibold uppercase tracking-[0.12em] text-lodge-linen no-underline sm:text-3xl sm:tracking-[0.16em];
+  @apply text-2xl font-normal uppercase text-lodge-ink no-underline sm:text-3xl;
+  font-family: "EPILONION SERIF DEMO", "Cormorant Garamond", Georgia, serif;
+  font-feature-settings: "liga" 1, "dlig" 1, "calt" 1;
+  font-variant-ligatures: common-ligatures discretionary-ligatures contextual;
+  letter-spacing: 0;
+  line-height: 0.85;
 }
 
 .site-footer__copy {
-  @apply mt-4 max-w-md text-sm leading-7 text-lodge-linen/70;
+  @apply mt-4 max-w-md text-sm leading-7 text-lodge-ink/70;
 }
 
 .site-footer__contact {
@@ -23,9 +28,9 @@
 }
 
 .site-footer__contact-item {
-  @apply inline-flex items-center gap-3 text-sm text-lodge-linen/70 no-underline transition hover:text-lodge-linen;
+  @apply inline-flex items-center gap-3 text-sm text-lodge-ink/70 no-underline transition hover:text-lodge-ink;
 }
 
 .site-footer__bottom {
-  @apply mt-10 flex flex-col gap-3 border-t border-lodge-linen/10 pt-6 text-xs uppercase tracking-[0.12em] text-lodge-linen/50 sm:flex-row sm:items-center sm:justify-between sm:tracking-[0.16em];
+  @apply mt-10 flex flex-col gap-3 border-t border-lodge-ink/10 pt-6 text-xs uppercase tracking-[0.12em] text-lodge-ink/50 sm:flex-row sm:items-center sm:justify-between sm:tracking-[0.16em];
 }

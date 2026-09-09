@@ -1,5 +1,5 @@
 .scroll-frames {
-  @apply absolute inset-0 h-full w-full overflow-hidden bg-lodge-ink;
+  @apply absolute inset-0 h-full w-full overflow-hidden bg-[#F4EBE6];
 }
 
 .scroll-frames__canvas {
@@ -7,11 +7,11 @@
 }
 
 .scroll-frames__loader {
-  @apply absolute inset-0 grid place-items-end bg-lodge-ink bg-cover bg-center transition-opacity duration-500;
+  @apply absolute inset-0 grid place-items-end bg-[#F4EBE6] bg-cover bg-center transition-opacity duration-500;
 }
 
 .scroll-frames__loader span {
-  @apply mb-8 h-px w-32 origin-left bg-lodge-linen/70 transition-transform duration-200;
+  @apply mb-8 h-px w-32 origin-left bg-lodge-moss/70 transition-transform duration-200;
 }
 
 .scroll-frames__loader--hidden {

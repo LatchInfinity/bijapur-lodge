@@ -1,10 +1,10 @@
 .hero-banner {
-  @apply relative z-10 bg-lodge-ink;
+  @apply relative z-10 bg-[#F4EBE6];
   height: var(--hero-scroll-height);
 }
 
 .hero-banner__sticky {
-  @apply sticky top-0 h-[100svh] min-h-[100svh] overflow-hidden bg-lodge-ink;
+  @apply sticky top-0 h-[100svh] min-h-[100svh] overflow-hidden bg-[#F4EBE6];
 }
 
 .hero-banner__hook {
@@ -12,8 +12,8 @@
 }
 
 .hero-banner__hook p {
-  @apply max-w-4xl font-display text-5xl font-semibold uppercase leading-[0.9] text-lodge-linen sm:text-7xl lg:text-8xl xl:text-[9rem];
-  text-shadow: 0 16px 56px rgba(0, 0, 0, 0.58);
+  @apply max-w-4xl font-display text-5xl font-normal uppercase leading-[0.9] text-lodge-ink/75 sm:text-7xl lg:text-8xl xl:text-[9rem];
+  text-shadow: 0 16px 56px rgba(244, 235, 230, 0.42);
 }
 
 .hero-banner__hook em,
@@ -24,7 +24,7 @@
 }
 
 .hero-banner__end-fade {
-  @apply pointer-events-none absolute inset-0 z-20 bg-black opacity-0 transition-opacity duration-300 ease-linear;
+  @apply pointer-events-none absolute inset-0 z-20 bg-[#F4EBE6] opacity-0 transition-opacity duration-300 ease-linear;
 }
 
 @media (max-width: 640px) {
