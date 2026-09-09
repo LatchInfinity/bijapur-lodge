@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { submitBooking } from "../../services/bookingApi.js";
 import "./StickyBooking.css";
 
 const getDigitsOnly = (value) => value.replace(/\D/g, "");
@@ -24,14 +25,19 @@ export default function StickyBooking({ onBookingComplete }) {
   const [phone, setPhone] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [submitLabel, setSubmitLabel] = useState("Book");
+  const [website, setWebsite] = useState("");
+  const [submitStatus, setSubmitStatus] = useState("idle");
+  const [submitError, setSubmitError] = useState("");
   const [isFooterVisible, setIsFooterVisible] = useState(false);
 
   const phoneDigits = useMemo(() => getDigitsOnly(phone), [phone]);
   const hasName = name.trim().length >= 2;
   const hasPhone = hasName && phoneDigits.length >= 10;
+  const hasValidDateRange = Boolean(startDate && endDate && endDate >= startDate);
+  const isSubmitting = submitStatus === "submitting";
+  const isSent = submitStatus === "sent";
   const step = hasPhone ? "date" : hasName ? "phone" : "name";
-  const canSubmit = hasName && hasPhone && Boolean(startDate) && Boolean(endDate);
+  const canSubmit = hasName && hasPhone && hasValidDateRange && !isSubmitting && !isSent;
 
   const openDatePicker = (inputRef) => {
     const dateInput = inputRef.current;
@@ -105,15 +111,36 @@ export default function StickyBooking({ onBookingComplete }) {
     return () => window.removeEventListener("scroll", closeOnMobileScroll);
   }, [isOpen]);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (!canSubmit) {
       return;
     }
 
-    setSubmitLabel("Sent");
-    onBookingComplete?.();
+    setSubmitStatus("submitting");
+    setSubmitError("");
+
+    try {
+      await submitBooking({
+        name: name.trim(),
+        phone: phoneDigits,
+        startDate,
+        endDate,
+        sourcePage: window.location.href,
+        honeypot: website,
+      });
+
+      setSubmitStatus("sent");
+      onBookingComplete?.();
+    } catch (error) {
+      setSubmitStatus("idle");
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "We could not send your booking request. Please try again."
+      );
+    }
   };
 
   return (
@@ -130,7 +157,20 @@ export default function StickyBooking({ onBookingComplete }) {
         Book Now
       </button>
 
-      <form className="sticky-booking__panel" onSubmit={handleSubmit}>
+      <form className="sticky-booking__panel" onSubmit={handleSubmit} aria-busy={isSubmitting}>
+        <div className="sticky-booking__trap" aria-hidden="true">
+          <label htmlFor="sticky-booking-website">Website</label>
+          <input
+            id="sticky-booking-website"
+            name="website"
+            type="text"
+            tabIndex={-1}
+            autoComplete="off"
+            value={website}
+            onChange={(event) => setWebsite(event.target.value)}
+          />
+        </div>
+
         <div className="sticky-booking__field sticky-booking__field--name">
           <label htmlFor="sticky-booking-name">Name</label>
           <input
@@ -223,9 +263,15 @@ export default function StickyBooking({ onBookingComplete }) {
             type="submit"
             disabled={!canSubmit}
           >
-            {submitLabel}
+            {isSubmitting ? "Sending..." : isSent ? "Sent" : "Book"}
           </button>
         </div>
+
+        {submitError ? (
+          <p className="sticky-booking__error" role="alert">
+            {submitError}
+          </p>
+        ) : null}
       </form>
     </aside>
   );

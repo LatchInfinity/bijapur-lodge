@@ -4,3 +4,5 @@ dist
 .env.*
 npm-debug.log*
 NUL
+booking-config.php
+public_html/api/booking-config.php

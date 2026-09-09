@@ -28,6 +28,11 @@
   @apply relative grid gap-2 rounded-md border border-lodge-ink/10 bg-lodge-linen/45 p-4 transition-all duration-500 ease-out;
 }
 
+.sticky-booking__trap {
+  @apply pointer-events-none absolute h-px w-px overflow-hidden opacity-0;
+  left: -9999px;
+}
+
 .sticky-booking__field label {
   @apply text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-lodge-ink/55;
 }
@@ -119,6 +124,10 @@
 
 .sticky-booking__submit {
   @apply h-12 min-h-12 rounded-md bg-lodge-linen px-6 text-sm font-semibold uppercase tracking-[0.14em] text-lodge-ink transition hover:bg-[#F4EBE6] disabled:cursor-not-allowed disabled:opacity-40 sm:min-w-32;
+}
+
+.sticky-booking__error {
+  @apply rounded-md border border-red-900/20 bg-red-900/10 px-4 py-3 text-sm font-medium text-red-950;
 }
 
 @media (max-width: 639px) {
@@ -224,6 +233,10 @@
 
   .sticky-booking__submit {
     @apply h-full min-h-24;
+  }
+
+  .sticky-booking__error {
+    grid-column: 1 / -1;
   }
 
   .sticky-booking--step-phone .sticky-booking__field--name,

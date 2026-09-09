@@ -11,6 +11,7 @@ export default {
           moss: "#66715b",
           ember: "#c95335",
           linen: "#f4efe5",
+          gold: "#B48F30",
         },
       },
       fontFamily: {
