@@ -274,6 +274,11 @@ export default function ScrollVideo({
         ? config.mobileEnhancedType
         : config.enhancedType,
     };
+    const shouldUpgradeToEnhancedSource = (
+      useMobileSources && typeof config.mobileUpgradeToEnhancedSource === "boolean"
+        ? config.mobileUpgradeToEnhancedSource
+        : config.upgradeToEnhancedSource
+    );
 
     if (!canUseBlobSource(config.useBlobSource)) {
       setVideoSrc(fallbackSource.src);
@@ -325,7 +330,7 @@ export default function ScrollVideo({
       if (!canUseEnhancedSource({
         enhancedSrc: enhancedSource.src,
         enhancedType: enhancedSource.type,
-        upgradeToEnhancedSource: config.upgradeToEnhancedSource,
+        upgradeToEnhancedSource: shouldUpgradeToEnhancedSource,
       })) {
         return;
       }
@@ -386,6 +391,7 @@ export default function ScrollVideo({
     config.mobileEnhancedType,
     config.mobileFallbackSrc,
     config.mobileFallbackType,
+    config.mobileUpgradeToEnhancedSource,
     config.src,
     config.type,
     config.upgradeToEnhancedSource,
