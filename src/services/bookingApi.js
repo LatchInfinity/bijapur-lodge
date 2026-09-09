@@ -1,9 +1,18 @@
 const DEFAULT_BOOKING_ENDPOINT = "/api/bookings.php";
+const GITHUB_PAGES_BOOKING_ENDPOINT = "https://thezari.co.in/api/bookings.php";
 const GENERIC_BOOKING_ERROR = "We could not send your booking request. Please try again.";
 
-const getBookingEndpoint = () => (
-  import.meta.env.VITE_BOOKING_ENDPOINT || DEFAULT_BOOKING_ENDPOINT
-);
+const getBookingEndpoint = () => {
+  if (import.meta.env.VITE_BOOKING_ENDPOINT) {
+    return import.meta.env.VITE_BOOKING_ENDPOINT;
+  }
+
+  if (globalThis.location?.hostname.endsWith("github.io")) {
+    return GITHUB_PAGES_BOOKING_ENDPOINT;
+  }
+
+  return DEFAULT_BOOKING_ENDPOINT;
+};
 
 export async function submitBooking(bookingDetails) {
   const response = await globalThis.fetch(getBookingEndpoint(), {

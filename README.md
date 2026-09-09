@@ -49,6 +49,12 @@ The booking form posts to a Hostinger PHP proxy, which forwards the request to a
 VITE_BOOKING_ENDPOINT=/api/bookings.php
 ```
 
+When the frontend is deployed on GitHub Pages or tested locally against Hostinger PHP, use the Hostinger API URL instead:
+
+```env
+VITE_BOOKING_ENDPOINT=https://thezari.co.in/api/bookings.php
+```
+
 Hostinger files:
 
 ```text
