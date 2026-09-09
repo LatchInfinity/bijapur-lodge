@@ -55,9 +55,11 @@ export default function ScrollFrames({
   const prefetchingFramesRef = useRef(new Set());
   const prefetchQueueRef = useRef([]);
   const prefetchAbortControllerRef = useRef(null);
+  const resourceHintLinksRef = useRef([]);
   const loadedInitialFramesRef = useRef(0);
   const targetFrameRef = useRef(0);
   const targetFrameProgressRef = useRef(0);
+  const scrollDirectionRef = useRef(1);
   const lastReportedFrameRef = useRef(-1);
   const lastDrawnFrameRef = useRef(-1);
   const lastDrawnFrameProgressRef = useRef(-1);
@@ -186,6 +188,37 @@ export default function ScrollFrames({
     setLoaderProgress(loadedCount / initialPreloadTarget);
   }, [initialPreloadTarget]);
 
+  const getOrderedFrameWindow = useCallback(
+    (centerFrame, behindCount, aheadCount, direction = 1) => {
+      const startFrame = clamp(centerFrame - behindCount, 0, frameCount - 1);
+      const endFrame = clamp(centerFrame + aheadCount, 0, frameCount - 1);
+      const orderedFrames = [clamp(centerFrame, 0, frameCount - 1)];
+
+      if (direction < 0) {
+        for (let frameIndex = centerFrame - 1; frameIndex >= startFrame; frameIndex -= 1) {
+          orderedFrames.push(frameIndex);
+        }
+
+        for (let frameIndex = centerFrame + 1; frameIndex <= endFrame; frameIndex += 1) {
+          orderedFrames.push(frameIndex);
+        }
+
+        return orderedFrames;
+      }
+
+      for (let frameIndex = centerFrame + 1; frameIndex <= endFrame; frameIndex += 1) {
+        orderedFrames.push(frameIndex);
+      }
+
+      for (let frameIndex = centerFrame - 1; frameIndex >= startFrame; frameIndex -= 1) {
+        orderedFrames.push(frameIndex);
+      }
+
+      return orderedFrames;
+    },
+    [frameCount],
+  );
+
   const pumpLoadingQueue = useCallback(function pumpQueue() {
     while (
       loadingFramesRef.current.size < config.maxConcurrentLoads &&
@@ -206,7 +239,12 @@ export default function ScrollFrames({
 
       const image = new Image();
       image.decoding = "async";
-      image.onload = () => {
+
+      if ("fetchPriority" in image) {
+        image.fetchPriority = frameIndex < initialPreloadTarget ? "high" : "low";
+      }
+
+      const handleImageReady = () => {
         if (!isMountedRef.current) {
           return;
         }
@@ -226,6 +264,12 @@ export default function ScrollFrames({
 
         trimDecodedFrameCache(targetFrameRef.current);
         pumpQueue();
+      };
+      image.onload = () => {
+        const decodePromise =
+          typeof image.decode === "function" ? image.decode() : Promise.resolve();
+
+        decodePromise.catch(() => undefined).then(handleImageReady);
       };
       image.onerror = () => {
         if (!isMountedRef.current) {
@@ -248,6 +292,38 @@ export default function ScrollFrames({
     updateInitialLoader,
   ]);
 
+  const prioritizeLoadingFrames = useCallback(
+    (orderedFrames) => {
+      const seenFrames = new Set();
+      const priorityFrames = orderedFrames.filter((frameIndex) => {
+        if (
+          seenFrames.has(frameIndex) ||
+          frameIndex < 0 ||
+          frameIndex >= frameCount ||
+          frameCacheRef.current.has(frameIndex) ||
+          loadingFramesRef.current.has(frameIndex)
+        ) {
+          return false;
+        }
+
+        seenFrames.add(frameIndex);
+        return true;
+      });
+
+      if (!priorityFrames.length) {
+        return;
+      }
+
+      const priorityFrameSet = new Set(priorityFrames);
+      loadingQueueRef.current = [
+        ...priorityFrames,
+        ...loadingQueueRef.current.filter((frameIndex) => !priorityFrameSet.has(frameIndex)),
+      ];
+      pumpLoadingQueue();
+    },
+    [frameCount, pumpLoadingQueue],
+  );
+
   const pumpPrefetchQueue = useCallback(function pumpQueue() {
     if (!config.prefetchAllFrames || !("fetch" in window)) {
       return;
@@ -264,6 +340,9 @@ export default function ScrollFrames({
       if (
         frameIndex < 0 ||
         frameIndex >= frameCount ||
+        frameCacheRef.current.has(frameIndex) ||
+        loadingFramesRef.current.has(frameIndex) ||
+        loadingQueueRef.current.includes(frameIndex) ||
         prefetchedFramesRef.current.has(frameIndex) ||
         prefetchingFramesRef.current.has(frameIndex)
       ) {
@@ -307,6 +386,45 @@ export default function ScrollFrames({
     }
   }, [config.prefetchAllFrames, config.prefetchConcurrentLoads, frameCount, frames]);
 
+  const prioritizePrefetchFrames = useCallback(
+    (orderedFrames) => {
+      if (!config.prefetchAllFrames || !("fetch" in window)) {
+        return;
+      }
+
+      const seenFrames = new Set();
+      const priorityFrames = orderedFrames.filter((frameIndex) => {
+        if (
+          seenFrames.has(frameIndex) ||
+          frameIndex < 0 ||
+          frameIndex >= frameCount ||
+          frameCacheRef.current.has(frameIndex) ||
+          loadingFramesRef.current.has(frameIndex) ||
+          loadingQueueRef.current.includes(frameIndex) ||
+          prefetchedFramesRef.current.has(frameIndex) ||
+          prefetchingFramesRef.current.has(frameIndex)
+        ) {
+          return false;
+        }
+
+        seenFrames.add(frameIndex);
+        return true;
+      });
+
+      if (!priorityFrames.length) {
+        return;
+      }
+
+      const priorityFrameSet = new Set(priorityFrames);
+      prefetchQueueRef.current = [
+        ...priorityFrames,
+        ...prefetchQueueRef.current.filter((frameIndex) => !priorityFrameSet.has(frameIndex)),
+      ];
+      pumpPrefetchQueue();
+    },
+    [config.prefetchAllFrames, frameCount, pumpPrefetchQueue],
+  );
+
   const queueFullFramePrefetch = useCallback(() => {
     if (!config.prefetchAllFrames || !("fetch" in window)) {
       return;
@@ -332,18 +450,35 @@ export default function ScrollFrames({
   }, [config.prefetchAllFrames, frameCount, pumpPrefetchQueue]);
 
   const requestFrame = useCallback(
-    (frameIndex) => {
+    (frameIndex, options = {}) => {
+      const { priority = false } = options;
+
       if (
         frameIndex < 0 ||
         frameIndex >= frameCount ||
         frameCacheRef.current.has(frameIndex) ||
-        loadingFramesRef.current.has(frameIndex) ||
-        loadingQueueRef.current.includes(frameIndex)
+        loadingFramesRef.current.has(frameIndex)
       ) {
         return;
       }
 
-      loadingQueueRef.current.push(frameIndex);
+      const queuedFrameIndex = loadingQueueRef.current.indexOf(frameIndex);
+
+      if (queuedFrameIndex >= 0) {
+        if (priority && queuedFrameIndex > 0) {
+          loadingQueueRef.current.splice(queuedFrameIndex, 1);
+          loadingQueueRef.current.unshift(frameIndex);
+        }
+
+        return;
+      }
+
+      if (priority) {
+        loadingQueueRef.current.unshift(frameIndex);
+      } else {
+        loadingQueueRef.current.push(frameIndex);
+      }
+
       pumpLoadingQueue();
     },
     [frameCount, pumpLoadingQueue],
@@ -351,15 +486,62 @@ export default function ScrollFrames({
 
   const requestFrameWindow = useCallback(
     (centerFrame) => {
-      const startFrame = clamp(centerFrame - config.preloadBehind, 0, frameCount - 1);
-      const endFrame = clamp(centerFrame + config.preloadAhead, 0, frameCount - 1);
+      const scrollDirection = scrollDirectionRef.current;
+      const loadOrder = getOrderedFrameWindow(
+        centerFrame,
+        config.preloadBehind,
+        config.preloadAhead,
+        scrollDirection,
+      );
+      const prefetchOrder = getOrderedFrameWindow(
+        centerFrame,
+        config.prefetchPriorityBehind ?? config.preloadBehind,
+        config.prefetchPriorityAhead ?? config.preloadAhead,
+        scrollDirection,
+      );
 
-      for (let frameIndex = startFrame; frameIndex <= endFrame; frameIndex += 1) {
-        requestFrame(frameIndex);
-      }
+      prioritizeLoadingFrames(loadOrder);
+      prioritizePrefetchFrames(prefetchOrder);
     },
-    [config.preloadAhead, config.preloadBehind, frameCount, requestFrame],
+    [
+      config.prefetchPriorityAhead,
+      config.prefetchPriorityBehind,
+      config.preloadAhead,
+      config.preloadBehind,
+      getOrderedFrameWindow,
+      prioritizeLoadingFrames,
+      prioritizePrefetchFrames,
+    ],
   );
+
+  const addInitialFrameResourceHints = useCallback(() => {
+    const hintCount = Math.min(Number(config.preloadHeadFrameCount) || 0, frameCount);
+
+    if (!hintCount || !document.head) {
+      return;
+    }
+
+    for (let frameIndex = 0; frameIndex < hintCount; frameIndex += 1) {
+      const frame = frames[frameIndex];
+
+      if (!frame?.url) {
+        continue;
+      }
+
+      const link = document.createElement("link");
+      link.rel = frameIndex === 0 ? "preload" : "prefetch";
+      link.as = "image";
+      link.href = frame.url;
+
+      if ("fetchPriority" in link) {
+        link.fetchPriority = frameIndex === 0 ? "high" : "low";
+      }
+
+      link.setAttribute("data-scroll-frame-hint", "true");
+      document.head.appendChild(link);
+      resourceHintLinksRef.current.push(link);
+    }
+  }, [config.preloadHeadFrameCount, frameCount, frames]);
 
   const resizeCanvas = useCallback(() => {
     const canvas = canvasRef.current;
@@ -392,8 +574,14 @@ export default function ScrollFrames({
     const scrollableDistance = Math.max(container.offsetHeight - window.innerHeight, 1);
     const progress = clamp(-rect.top / scrollableDistance, 0, 1);
     const frameProgress = progress * (frameCount - 1);
+    const previousTargetFrame = targetFrameRef.current;
     const nextFrame = clamp(Math.floor(frameProgress), 0, frameCount - 1);
     const blendFrame = clamp(Math.ceil(frameProgress), 0, frameCount - 1);
+    const scrollDelta = nextFrame - previousTargetFrame;
+
+    if (scrollDelta !== 0) {
+      scrollDirectionRef.current = scrollDelta > 0 ? 1 : -1;
+    }
 
     targetFrameProgressRef.current = frameProgress;
     targetFrameRef.current = nextFrame;
@@ -404,13 +592,16 @@ export default function ScrollFrames({
       onFrameChange?.(nextFrame, frames[nextFrame]);
     }
 
-    requestFrameWindow(nextFrame);
-    requestFrame(blendFrame);
+    if (loadedInitialFramesRef.current >= initialPreloadTarget) {
+      requestFrameWindow(nextFrame);
+      requestFrame(blendFrame, { priority: true });
+    }
   }, [
     frameCount,
     frames,
     onFrameChange,
     onFrameProgressChange,
+    initialPreloadTarget,
     requestFrame,
     requestFrameWindow,
     scrollContainerRef,
@@ -440,14 +631,15 @@ export default function ScrollFrames({
     const prefetchingFrames = prefetchingFramesRef.current;
 
     // Load the opening frames first so the canvas never begins blank.
+    addInitialFrameResourceHints();
+
     for (let frameIndex = 0; frameIndex < initialPreloadTarget; frameIndex += 1) {
-      requestFrame(frameIndex);
+      requestFrame(frameIndex, { priority: true });
     }
 
     prefetchAbortControllerRef.current =
       "AbortController" in window ? new window.AbortController() : null;
 
-    requestFrameWindow(0);
     resizeCanvas();
     updateScrollTarget();
 
@@ -467,8 +659,11 @@ export default function ScrollFrames({
       prefetchedFrames.clear();
       prefetchQueueRef.current = [];
       prefetchingFrames.clear();
+      resourceHintLinksRef.current.forEach((link) => link.remove());
+      resourceHintLinksRef.current = [];
     };
   }, [
+    addInitialFrameResourceHints,
     frameCount,
     initialPreloadTarget,
     queueScrollUpdate,
@@ -482,6 +677,8 @@ export default function ScrollFrames({
     if (!isReady || !frameCount || !config.prefetchAllFrames) {
       return undefined;
     }
+
+    requestFrameWindow(targetFrameRef.current);
 
     const timerId = window.setTimeout(
       queueFullFramePrefetch,
@@ -497,6 +694,7 @@ export default function ScrollFrames({
     frameCount,
     isReady,
     queueFullFramePrefetch,
+    requestFrameWindow,
   ]);
 
   useEffect(() => {

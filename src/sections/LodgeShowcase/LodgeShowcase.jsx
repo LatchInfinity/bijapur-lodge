@@ -76,7 +76,13 @@ export default function LodgeShowcase() {
                 className="lodge-showcase__card"
                 key={image.id}
               >
-                <img className="lodge-showcase__image" src={image.src} alt={image.alt} />
+                <img
+                  className="lodge-showcase__image"
+                  src={image.src}
+                  alt={image.alt}
+                  loading="lazy"
+                  decoding="async"
+                />
               </article>
             ))}
           </div>
