@@ -7,6 +7,7 @@ return [
     'booking_shared_secret' => 'replace-with-a-long-random-secret',
     'allowed_origins' => [
         'https://thezari.co.in',
+        'https://latchinfinity.github.io',
         'http://localhost:5173',
         'http://127.0.0.1:5173',
     ],

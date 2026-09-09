@@ -17,6 +17,7 @@ const formatIndianDate = (value) => {
 };
 
 export default function StickyBooking({ onBookingComplete }) {
+  const bookingRef = useRef(null);
   const startDateInputRef = useRef(null);
   const endDateInputRef = useRef(null);
   const openScrollPositionRef = useRef(0);
@@ -100,8 +101,9 @@ export default function StickyBooking({ onBookingComplete }) {
     const mobileQuery = window.matchMedia(MOBILE_BOOKING_QUERY);
     const closeOnMobileScroll = () => {
       const hasScrolled = Math.abs(window.scrollY - openScrollPositionRef.current) > 2;
+      const isBookingFocused = bookingRef.current?.contains(document.activeElement);
 
-      if (mobileQuery.matches && hasScrolled) {
+      if (mobileQuery.matches && hasScrolled && !isBookingFocused) {
         setIsOpen(false);
       }
     };
@@ -145,6 +147,7 @@ export default function StickyBooking({ onBookingComplete }) {
 
   return (
     <aside
+      ref={bookingRef}
       className={`sticky-booking ${isOpen ? "sticky-booking--open" : ""} ${isFooterVisible ? "sticky-booking--hidden" : ""} sticky-booking--step-${step}`}
       id="booking"
       aria-label="Quick lodge booking"
