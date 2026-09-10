@@ -68,7 +68,7 @@ The real `booking-config.php` file is ignored by Git.
 
 ## Production Test
 
-Submit a valid booking from the live Hostinger site and confirm a new row appears in the Google Sheet. Invalid names, non-10-digit phone numbers, missing dates, and end dates before start dates should stay on the form with an error.
+Submit a valid booking from the live Hostinger site and confirm a new row appears in the Google Sheet. Invalid names and non-10-digit phone numbers should stay on the form with an error.
 
 For local testing from Vite, keep `http://localhost:5173` in `allowed_origins`. The frontend sends the booking JSON as `text/plain;charset=UTF-8`, which avoids a browser preflight on shared hosting while still letting PHP forward JSON to Apps Script.
 

@@ -95,7 +95,7 @@ Apps Script setup:
 The Google Sheet will receive:
 
 ```text
-Submitted At, Booking ID, Name, Phone, Start Date, End Date, Nights, Source Page, User Agent
+Submitted At, Booking ID, Name, Phone, Source Page, User Agent
 ```
 
 The frontend sends the booking JSON as `text/plain;charset=UTF-8` so shared hosting does not need to handle a browser preflight before local testing.

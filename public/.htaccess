@@ -2,7 +2,12 @@
   RewriteEngine On
   RewriteBase /bijapur-lodge/
   RewriteRule ^index\.html$ - [L]
+  RewriteRule ^(assets|media)/ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule . /bijapur-lodge/index.html [L]
 </IfModule>
+
+AddType application/javascript .js .mjs
+AddType text/css .css
+AddType image/svg+xml .svg
