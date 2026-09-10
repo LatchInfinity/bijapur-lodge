@@ -12,8 +12,7 @@
 }
 
 .lodge-showcase__header p {
-  @apply font-display text-xl font-normal uppercase leading-none tracking-[0.08em] text-lodge-ink/75 sm:text-3xl sm:tracking-[0.1em] lg:text-4xl;
-  font-family: "Cormorant Garamond", Georgia, serif;
+  @apply font-sans text-xl font-normal uppercase leading-none tracking-[0.08em] text-lodge-ink/75 sm:text-3xl sm:tracking-[0.1em] lg:text-4xl;
 }
 
 .lodge-showcase__viewport {
