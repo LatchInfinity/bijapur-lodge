@@ -17,6 +17,7 @@ const formatIndianDate = (value) => {
 };
 
 export default function StickyBooking({ onBookingComplete }) {
+  const bookingRef = useRef(null);
   const startDateInputRef = useRef(null);
   const endDateInputRef = useRef(null);
   const openScrollPositionRef = useRef(0);
@@ -70,6 +71,19 @@ export default function StickyBooking({ onBookingComplete }) {
     setIsOpen(true);
   };
 
+  const handleCloseBooking = () => {
+    const activeElement = document.activeElement;
+
+    if (
+      bookingRef.current?.contains(activeElement)
+      && typeof activeElement?.blur === "function"
+    ) {
+      activeElement.blur();
+    }
+
+    setIsOpen(false);
+  };
+
   useEffect(() => {
     const footer = document.getElementById("contact");
 
@@ -100,8 +114,9 @@ export default function StickyBooking({ onBookingComplete }) {
     const mobileQuery = window.matchMedia(MOBILE_BOOKING_QUERY);
     const closeOnMobileScroll = () => {
       const hasScrolled = Math.abs(window.scrollY - openScrollPositionRef.current) > 2;
+      const isBookingFocused = bookingRef.current?.contains(document.activeElement);
 
-      if (mobileQuery.matches && hasScrolled) {
+      if (mobileQuery.matches && hasScrolled && !isBookingFocused) {
         setIsOpen(false);
       }
     };
@@ -145,6 +160,7 @@ export default function StickyBooking({ onBookingComplete }) {
 
   return (
     <aside
+      ref={bookingRef}
       className={`sticky-booking ${isOpen ? "sticky-booking--open" : ""} ${isFooterVisible ? "sticky-booking--hidden" : ""} sticky-booking--step-${step}`}
       id="booking"
       aria-label="Quick lodge booking"
@@ -170,6 +186,15 @@ export default function StickyBooking({ onBookingComplete }) {
             onChange={(event) => setWebsite(event.target.value)}
           />
         </div>
+
+        <button
+          className="sticky-booking__close"
+          type="button"
+          aria-label="Close booking"
+          onClick={handleCloseBooking}
+        >
+          X
+        </button>
 
         <div className="sticky-booking__field sticky-booking__field--name">
           <label htmlFor="sticky-booking-name">Name</label>

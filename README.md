@@ -64,6 +64,8 @@ public_html/api/booking-config.php
 
 Create `public_html/api/booking-config.php` from `public_html/api/booking-config.example.php`, then add your Apps Script deployment URL, shared secret, and allowed origins. The real config file is ignored by Git.
 
+For GitHub Pages, the allowed origin is `https://latchinfinity.github.io`, not the full `/bijapur-lodge/` page URL.
+
 Apps Script setup:
 
 1. Create a Google Apps Script project.
