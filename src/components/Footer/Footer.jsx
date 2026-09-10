@@ -15,10 +15,10 @@ export default function Footer() {
 
         <address className="site-footer__contact">
           <a className="site-footer__contact-item" href="tel:+910000000000">
-            <span>+91 00000 00000</span>
+            <span>+91 95888 62457</span>
           </a>
           <a className="site-footer__contact-item" href="mailto:stay@bijapurlodge.com">
-            <span>stay@bijapurlodge.com</span>
+            <span>reservations@bijapurlodge.com</span>
           </a>
          
         </address>
