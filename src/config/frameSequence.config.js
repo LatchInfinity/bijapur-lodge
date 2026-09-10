@@ -1,7 +1,13 @@
+const PC_FRAME_DIRECTORY_LABEL = "/assets/pc-frames/";
+const MOBILE_FRAME_DIRECTORY_LABEL = "/assets/mobile-frames/";
+const MOBILE_FRAME_MEDIA_QUERY = "(max-width: 640px)";
+
 export const HERO_FRAME_SEQUENCE = {
   // Vite requires import.meta.glob paths to be literal strings, so the matching glob
   // is kept in this same config module. Change frame directory/naming here.
-  frameDirectoryLabel: "/assets/pc-frames/",
+  frameDirectoryLabel: PC_FRAME_DIRECTORY_LABEL,
+  mobileFrameDirectoryLabel: MOBILE_FRAME_DIRECTORY_LABEL,
+  mobileFrameMediaQuery: MOBILE_FRAME_MEDIA_QUERY,
   framePrefix: "frame_",
   frameExtension: ".jpg",
   frameExtensions: [".jpg", ".jpeg", ".png", ".webp"],
@@ -32,13 +38,18 @@ export const HERO_FRAME_SEQUENCE = {
   endFadeFrameCount: 28,
 };
 
+export const HERO_MOBILE_FRAME_SEQUENCE = {
+  ...HERO_FRAME_SEQUENCE,
+  frameDirectoryLabel: MOBILE_FRAME_DIRECTORY_LABEL,
+};
+
 export const formatFrameFileName = (frameNumber, config = HERO_FRAME_SEQUENCE) => {
   const paddedNumber = String(frameNumber).padStart(config.framePadding, "0");
 
   return `${config.framePrefix}${paddedNumber}${config.frameExtension}`;
 };
 
-const frameModules = {
+const desktopFrameModules = {
   ...import.meta.glob("../../assets/pc-frames/frame_*.jpg", {
     eager: true,
     import: "default",
@@ -55,6 +66,29 @@ const frameModules = {
     query: "?url",
   }),
   ...import.meta.glob("../../assets/pc-frames/frame_*.webp", {
+    eager: true,
+    import: "default",
+    query: "?url",
+  }),
+};
+
+const mobileFrameModules = {
+  ...import.meta.glob("../../assets/mobile-frames/frame_*.jpg", {
+    eager: true,
+    import: "default",
+    query: "?url",
+  }),
+  ...import.meta.glob("../../assets/mobile-frames/frame_*.jpeg", {
+    eager: true,
+    import: "default",
+    query: "?url",
+  }),
+  ...import.meta.glob("../../assets/mobile-frames/frame_*.png", {
+    eager: true,
+    import: "default",
+    query: "?url",
+  }),
+  ...import.meta.glob("../../assets/mobile-frames/frame_*.webp", {
     eager: true,
     import: "default",
     query: "?url",
@@ -80,27 +114,35 @@ const getFrameNumber = (path, config = HERO_FRAME_SEQUENCE) => {
   return match ? Number(match[1]) : Number.MAX_SAFE_INTEGER;
 };
 
-const getFrameFileName = (path, frameNumber) => {
-  const fileExtension = path.match(/\.[a-z0-9]+$/i)?.[0] || HERO_FRAME_SEQUENCE.frameExtension;
-  const paddedNumber = String(frameNumber).padStart(HERO_FRAME_SEQUENCE.framePadding, "0");
+const getFrameFileName = (path, frameNumber, config = HERO_FRAME_SEQUENCE) => {
+  const fileExtension = path.match(/\.[a-z0-9]+$/i)?.[0] || config.frameExtension;
+  const paddedNumber = String(frameNumber).padStart(config.framePadding, "0");
 
-  return `${HERO_FRAME_SEQUENCE.framePrefix}${paddedNumber}${fileExtension}`;
+  return `${config.framePrefix}${paddedNumber}${fileExtension}`;
 };
 
-const discoveredFrames = Object.entries(frameModules)
+const getDiscoveredFrames = (frameModules, config = HERO_FRAME_SEQUENCE) => Object.entries(frameModules)
   .map(([path, url]) => {
-    const frameNumber = getFrameNumber(path);
+    const frameNumber = getFrameNumber(path, config);
 
     return {
       frameNumber,
-      fileName: getFrameFileName(path, frameNumber),
+      fileName: getFrameFileName(path, frameNumber, config),
       url,
     };
   })
-  .filter((frame) => frame.frameNumber >= HERO_FRAME_SEQUENCE.firstFrame)
+  .filter((frame) => frame.frameNumber >= config.firstFrame)
   .sort((firstFrame, secondFrame) => firstFrame.frameNumber - secondFrame.frameNumber);
+
+const desktopFrames = getDiscoveredFrames(desktopFrameModules, HERO_FRAME_SEQUENCE);
+const mobileFrames = getDiscoveredFrames(mobileFrameModules, HERO_MOBILE_FRAME_SEQUENCE);
 
 export const heroFrames =
   typeof HERO_FRAME_SEQUENCE.totalFrames === "number"
-    ? discoveredFrames.slice(0, HERO_FRAME_SEQUENCE.totalFrames)
-    : discoveredFrames;
+    ? desktopFrames.slice(0, HERO_FRAME_SEQUENCE.totalFrames)
+    : desktopFrames;
+
+export const heroMobileFrames =
+  typeof HERO_MOBILE_FRAME_SEQUENCE.totalFrames === "number"
+    ? mobileFrames.slice(0, HERO_MOBILE_FRAME_SEQUENCE.totalFrames)
+    : mobileFrames;

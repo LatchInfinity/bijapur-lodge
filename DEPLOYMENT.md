@@ -14,10 +14,16 @@ npm run deploy:check
 1. Build the site:
 
    ```bash
-   npm run build
+   npm run build:hostinger
    ```
 
-2. Upload the contents of `dist/` to Hostinger `public_html/`.
+2. Upload the contents of `dist/` to Hostinger:
+
+   ```text
+   public_html/bijapur-lodge/
+   ```
+
+The Hostinger build uses `/bijapur-lodge/` as the Vite base path, so compiled JS, CSS, images, and media load from `/bijapur-lodge/assets/` and `/bijapur-lodge/media/`.
 
 ## Booking API Upload
 

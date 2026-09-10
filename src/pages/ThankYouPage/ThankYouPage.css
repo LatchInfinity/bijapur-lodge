@@ -1,9 +1,19 @@
 .thank-you-page {
-  @apply grid min-h-[100svh] place-items-center bg-[#F4EBE6] pb-12 pt-24 text-lodge-ink sm:pb-16;
+  @apply relative isolate grid min-h-[100svh] place-items-center overflow-hidden bg-[#F4EBE6] pb-12 pt-24 text-lodge-ink sm:pb-16;
+  font-family: "Roboto", Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.thank-you-page::before {
+  @apply pointer-events-none absolute inset-0 -z-10 bg-center bg-no-repeat opacity-40;
+  content: "";
+  background-image: url("../../../assets/bg/thankyou.svg");
+  background-size: min(118rem, 132vw) auto;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 34%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 34%, transparent 100%);
 }
 
 .thank-you-page__content {
-  @apply mx-auto w-full max-w-4xl text-center;
+  @apply relative mx-auto w-full max-w-7xl text-center;
   animation: thank-you-content-enter 700ms ease both;
 }
 
@@ -12,8 +22,8 @@
 }
 
 .thank-you-page__title {
-  @apply mt-4 font-display text-5xl font-normal uppercase leading-none text-lodge-ink sm:mt-5 sm:text-8xl;
-  font-family: "Cormorant Garamond", Georgia, serif;
+  @apply mt-4 text-[6rem] font-normal uppercase leading-[0.88] sm:mt-5 sm:text-[12rem];
+  color: #291613;
 }
 
 .thank-you-page__copy {
@@ -39,5 +49,11 @@
 @media (prefers-reduced-motion: reduce) {
   .thank-you-page__content {
     animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .thank-you-page::before {
+    background-size: auto 100%;
   }
 }

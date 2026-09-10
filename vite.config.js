@@ -1,11 +1,18 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 
-const env = globalThis.process?.env ?? {};
-const repositoryName = env.GITHUB_REPOSITORY?.split("/").pop();
-const githubPagesBase = env.VITE_BASE_PATH ?? (repositoryName ? `/${repositoryName}/` : "/");
+export default defineConfig(({ mode }) => {
+  const processEnv = globalThis.process?.env ?? {};
+  const env = {
+    ...processEnv,
+    ...loadEnv(mode, globalThis.process?.cwd() ?? ".", ""),
+  };
+  const repositoryName = env.GITHUB_REPOSITORY?.split("/").pop();
+  const githubPagesBase = repositoryName ? `/${repositoryName}/` : "/";
+  const base = env.VITE_BASE_PATH ?? (env.GITHUB_ACTIONS ? githubPagesBase : "/");
 
-export default defineConfig({
-  base: env.GITHUB_ACTIONS ? githubPagesBase : "/",
-  plugins: [react()],
+  return {
+    base,
+    plugins: [react()],
+  };
 });

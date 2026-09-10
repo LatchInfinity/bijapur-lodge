@@ -23,6 +23,12 @@ npm run lint
 npm run build
 ```
 
+Build for Hostinger under `https://thezari.co.in/bijapur-lodge/`:
+
+```bash
+npm run build:hostinger
+```
+
 ## Hero Frames
 
 The hero uses a scroll-synced image sequence:
@@ -40,6 +46,16 @@ src/config/frameSequence.config.js
 ```
 
 Desktop currently reads frames from `assets/pc-frames`. JPG, JPEG, PNG, and WebP frame files are supported. Mobile-specific frames can be added later with a separate config/source set.
+
+Mobile hero frames are read from:
+
+```text
+assets/mobile-frames/frame_001.jpg
+assets/mobile-frames/frame_002.jpg
+assets/mobile-frames/frame_003.jpg
+```
+
+The hero switches to the mobile frame sequence at the configured mobile media query in `src/config/frameSequence.config.js`.
 
 ## Booking To Google Sheets
 
@@ -92,3 +108,15 @@ https://your-domain.com/api/bookings.php?health=upstream
 ```
 
 The upstream health check confirms that PHP can reach Apps Script and Apps Script can open the configured Google Sheet.
+
+## Meta Pixel
+
+Add your Meta Pixel ID before building:
+
+```env
+VITE_META_PIXEL_ID=your-meta-pixel-id
+```
+
+The app loads Meta Pixel when this value exists. It tracks `PageView` on the landing page and thank-you page, and tracks `Lead` once after a booking is saved successfully.
+
+For GitHub Pages, add `VITE_META_PIXEL_ID` as a repository variable before deploying. For Hostinger, put it in the local `.env` used before `npm run build`.
