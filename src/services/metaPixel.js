@@ -53,7 +53,7 @@ export function trackMetaPageView(pageName) {
   initializeMetaPixel();
   getFbq()("track", "PageView", {
     page_name: pageName,
-    page_path: `${window.location.pathname}${window.location.hash}`,
+    page_path: `${window.location.pathname}${window.location.search}`,
   });
 }
 
