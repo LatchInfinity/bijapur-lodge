@@ -1,15 +1,25 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import ScrollFrames from "../../components/ScrollFrames/ScrollFrames.jsx";
-import { HERO_FRAME_SEQUENCE, heroFrames } from "../../config/frameSequence.config.js";
+import {
+  HERO_FRAME_SEQUENCE,
+  HERO_MOBILE_FRAME_SEQUENCE,
+  heroFrames,
+  heroMobileFrames,
+} from "../../config/frameSequence.config.js";
 import "./HeroBanner.css";
 
 const smoothStep = (value) => value * value * (3 - 2 * value);
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
-const getIntroHookOpacity = (frameProgress) => {
-  const holdFrame = HERO_FRAME_SEQUENCE.introHookVisibleUntilFrame;
-  const fadeEndFrame = HERO_FRAME_SEQUENCE.introHookFadeOutByFrame;
+const getUsesMobileFrames = () => (
+  typeof window !== "undefined"
+    && window.matchMedia(HERO_FRAME_SEQUENCE.mobileFrameMediaQuery).matches
+);
+
+const getIntroHookOpacity = (frameProgress, config) => {
+  const holdFrame = config.introHookVisibleUntilFrame;
+  const fadeEndFrame = config.introHookFadeOutByFrame;
 
   if (frameProgress <= holdFrame) {
     return 1;
@@ -24,12 +34,12 @@ const getIntroHookOpacity = (frameProgress) => {
   return 1 - smoothStep(fadeProgress);
 };
 
-const getEndFadeOpacity = (frameProgress, frameCount) => {
+const getEndFadeOpacity = (frameProgress, frameCount, config) => {
   const finalFrame = Math.max(frameCount - 1, 1);
-  const endFadeStartProgress = Number(HERO_FRAME_SEQUENCE.endFadeStartProgress);
+  const endFadeStartProgress = Number(config.endFadeStartProgress);
   const fadeStartFrame = Number.isFinite(endFadeStartProgress)
     ? finalFrame * clamp(endFadeStartProgress, 0, 0.99)
-    : Math.max(finalFrame - HERO_FRAME_SEQUENCE.endFadeFrameCount, 0);
+    : Math.max(finalFrame - config.endFadeFrameCount, 0);
 
   if (frameProgress <= fadeStartFrame) {
     return 0;
@@ -42,14 +52,34 @@ export default function HeroBanner() {
   const heroRef = useRef(null);
   const hookRef = useRef(null);
   const endFadeRef = useRef(null);
+  const [usesMobileFrames, setUsesMobileFrames] = useState(getUsesMobileFrames);
+  const hasMobileFrames = heroMobileFrames.length > 0;
+  const activeFrameSet = usesMobileFrames && hasMobileFrames ? "mobile" : "desktop";
+  const activeConfig = activeFrameSet === "mobile" ? HERO_MOBILE_FRAME_SEQUENCE : HERO_FRAME_SEQUENCE;
+  const activeFrames = activeFrameSet === "mobile" ? heroMobileFrames : heroFrames;
+
   const handleFrameProgressChange = useCallback((frameProgress) => {
     if (hookRef.current) {
-      hookRef.current.style.opacity = getIntroHookOpacity(frameProgress);
+      hookRef.current.style.opacity = getIntroHookOpacity(frameProgress, activeConfig);
     }
 
     if (endFadeRef.current) {
-      endFadeRef.current.style.opacity = getEndFadeOpacity(frameProgress, heroFrames.length);
+      endFadeRef.current.style.opacity = getEndFadeOpacity(
+        frameProgress,
+        activeFrames.length,
+        activeConfig,
+      );
     }
+  }, [activeConfig, activeFrames.length]);
+
+  useEffect(() => {
+    const mediaQueryList = window.matchMedia(HERO_FRAME_SEQUENCE.mobileFrameMediaQuery);
+    const updateFrameSet = () => setUsesMobileFrames(mediaQueryList.matches);
+
+    updateFrameSet();
+    mediaQueryList.addEventListener("change", updateFrameSet);
+
+    return () => mediaQueryList.removeEventListener("change", updateFrameSet);
   }, []);
 
   return (
@@ -68,8 +98,9 @@ export default function HeroBanner() {
       </h1>
       <div className="hero-banner__sticky">
         <ScrollFrames
-          config={HERO_FRAME_SEQUENCE}
-          frames={heroFrames}
+          key={activeFrameSet}
+          config={activeConfig}
+          frames={activeFrames}
           onFrameProgressChange={handleFrameProgressChange}
           scrollContainerRef={heroRef}
         />

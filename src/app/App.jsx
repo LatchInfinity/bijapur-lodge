@@ -5,6 +5,7 @@ import StickyBooking from "../components/StickyBooking/StickyBooking.jsx";
 import HeroBanner from "../sections/HeroBanner/HeroBanner.jsx";
 import LodgeShowcase from "../sections/LodgeShowcase/LodgeShowcase.jsx";
 import ThankYouPage from "../pages/ThankYouPage/ThankYouPage.jsx";
+import { initializeMetaPixel, trackMetaLead, trackMetaPageView } from "../services/metaPixel.js";
 import "./App.css";
 
 const ROUTE_TRANSITION_DURATION = 420;
@@ -19,6 +20,7 @@ const getPageFromHash = () => (
 export default function App() {
   const transitionTimeoutRef = useRef(null);
   const transitionFrameRef = useRef(null);
+  const hasTrackedLeadRef = useRef(false);
   const [activePage, setActivePage] = useState(getPageFromHash);
   const [transitionState, setTransitionState] = useState("entered");
 
@@ -74,7 +76,20 @@ export default function App() {
     }
   }, []);
 
+  useEffect(() => {
+    initializeMetaPixel();
+  }, []);
+
+  useEffect(() => {
+    trackMetaPageView(activePage === THANK_YOU_PAGE ? "Thank You" : "Landing");
+  }, [activePage]);
+
   const handleBookingComplete = () => {
+    if (!hasTrackedLeadRef.current) {
+      hasTrackedLeadRef.current = true;
+      trackMetaLead();
+    }
+
     transitionToPage(THANK_YOU_PAGE, { hash: "#thank-you", updateHash: true });
   };
 

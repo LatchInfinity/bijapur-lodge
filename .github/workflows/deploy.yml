@@ -38,6 +38,7 @@ jobs:
       - name: Build
         env:
           VITE_BOOKING_ENDPOINT: https://thezari.co.in/api/bookings.php
+          VITE_META_PIXEL_ID: ${{ vars.VITE_META_PIXEL_ID }}
         run: npm run build
 
       - name: Upload Pages artifact
