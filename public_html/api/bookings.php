@@ -179,27 +179,10 @@ function readJsonBody(): array
     return $data;
 }
 
-function parseDateValue(string $value, DateTimeZone $timezone): DateTimeImmutable
-{
-    $date = DateTimeImmutable::createFromFormat('!Y-m-d', $value, $timezone);
-    $errors = DateTimeImmutable::getLastErrors();
-
-    if (!$date || ($errors !== false && ($errors['warning_count'] > 0 || $errors['error_count'] > 0))) {
-        respond(422, [
-            'ok' => false,
-            'message' => 'Please choose valid booking dates.',
-        ]);
-    }
-
-    return $date;
-}
-
 function validateBooking(array $data): array
 {
     $name = trim((string) ($data['name'] ?? ''));
     $phone = preg_replace('/\D+/', '', (string) ($data['phone'] ?? '')) ?? '';
-    $startDateValue = trim((string) ($data['startDate'] ?? ''));
-    $endDateValue = trim((string) ($data['endDate'] ?? ''));
     $honeypot = trim((string) ($data['honeypot'] ?? $data['website'] ?? ''));
     $sourcePage = trim((string) ($data['sourcePage'] ?? ''));
 
@@ -225,26 +208,12 @@ function validateBooking(array $data): array
     }
 
     $timezone = new DateTimeZone(TIMEZONE);
-    $startDate = parseDateValue($startDateValue, $timezone);
-    $endDate = parseDateValue($endDateValue, $timezone);
-
-    if ($endDate < $startDate) {
-        respond(422, [
-            'ok' => false,
-            'message' => 'End date must be after the start date.',
-        ]);
-    }
-
-    $nights = max(1, (int) $startDate->diff($endDate)->format('%a'));
     $bookingId = 'BL-' . (new DateTimeImmutable('now', $timezone))->format('Ymd-His') . '-' . strtoupper(bin2hex(random_bytes(2)));
 
     return [
         'bookingId' => $bookingId,
         'name' => $name,
         'phone' => $phone,
-        'startDate' => $startDate->format('Y-m-d'),
-        'endDate' => $endDate->format('Y-m-d'),
-        'nights' => $nights,
         'sourcePage' => $sourcePage,
         'userAgent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
         'submittedAt' => (new DateTimeImmutable('now', $timezone))->format(DateTimeInterface::ATOM),

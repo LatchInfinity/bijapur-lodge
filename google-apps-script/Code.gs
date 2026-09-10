@@ -3,9 +3,6 @@ const BOOKING_HEADERS = [
   'Booking ID',
   'Name',
   'Phone',
-  'Start Date',
-  'End Date',
-  'Nights',
   'Source Page',
   'User Agent',
 ];
@@ -42,9 +39,6 @@ function doPost(event) {
       booking.bookingId,
       booking.name,
       booking.phone,
-      formatIndianDate_(booking.startDate),
-      formatIndianDate_(booking.endDate),
-      booking.nights,
       booking.sourcePage,
       booking.userAgent,
     ]);
@@ -78,8 +72,6 @@ function parsePayload_(event) {
 function validateBooking_(payload) {
   const name = String(payload.name || '').trim();
   const phone = String(payload.phone || '').replace(/\D/g, '');
-  const startDate = String(payload.startDate || '').trim();
-  const endDate = String(payload.endDate || '').trim();
   const bookingId = String(payload.bookingId || '').trim();
 
   if (name.length < 2 || /\d/.test(name)) {
@@ -90,17 +82,10 @@ function validateBooking_(payload) {
     throw new Error('Invalid phone.');
   }
 
-  if (!isIsoDate_(startDate) || !isIsoDate_(endDate) || endDate < startDate) {
-    throw new Error('Invalid dates.');
-  }
-
   return {
     bookingId: bookingId || createBookingId_(),
     name,
     phone,
-    startDate,
-    endDate,
-    nights: Math.max(1, Number(payload.nights) || calculateNights_(startDate, endDate)),
     sourcePage: String(payload.sourcePage || '').trim(),
     userAgent: String(payload.userAgent || '').trim(),
   };
@@ -151,28 +136,13 @@ function getHealth_(properties) {
 }
 
 function ensureHeaders_(sheet) {
-  const firstCell = sheet.getRange(1, 1).getValue();
-
-  if (firstCell) {
-    return;
-  }
-
   sheet.getRange(1, 1, 1, BOOKING_HEADERS.length).setValues([BOOKING_HEADERS]);
-}
 
-function isIsoDate_(value) {
-  return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00+05:30`));
-}
+  const extraHeaderColumns = sheet.getLastColumn() - BOOKING_HEADERS.length;
 
-function calculateNights_(startDate, endDate) {
-  const start = new Date(`${startDate}T00:00:00+05:30`);
-  const end = new Date(`${endDate}T00:00:00+05:30`);
-  return Math.round((end.getTime() - start.getTime()) / 86400000);
-}
-
-function formatIndianDate_(value) {
-  const parts = value.split('-');
-  return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  if (extraHeaderColumns > 0) {
+    sheet.getRange(1, BOOKING_HEADERS.length + 1, 1, extraHeaderColumns).clearContent();
+  }
 }
 
 function createBookingId_() {
