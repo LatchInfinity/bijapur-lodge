@@ -11,5 +11,5 @@ return [
         'http://localhost:5173',
         'http://127.0.0.1:5173',
     ],
-    'request_timeout_seconds' => 12,
+    'request_timeout_seconds' => 30,
 ];

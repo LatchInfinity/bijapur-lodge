@@ -83,7 +83,7 @@ function getBookingServiceConfig(array $config): array
 {
     $appsScriptUrl = trim((string) ($config['apps_script_web_app_url'] ?? ''));
     $sharedSecret = trim((string) ($config['booking_shared_secret'] ?? ''));
-    $timeout = (int) ($config['request_timeout_seconds'] ?? 12);
+    $timeout = (int) ($config['request_timeout_seconds'] ?? 30);
 
     if (!hasConfigFile()) {
         respond(503, [
@@ -179,27 +179,10 @@ function readJsonBody(): array
     return $data;
 }
 
-function parseDateValue(string $value, DateTimeZone $timezone): DateTimeImmutable
-{
-    $date = DateTimeImmutable::createFromFormat('!Y-m-d', $value, $timezone);
-    $errors = DateTimeImmutable::getLastErrors();
-
-    if (!$date || ($errors !== false && ($errors['warning_count'] > 0 || $errors['error_count'] > 0))) {
-        respond(422, [
-            'ok' => false,
-            'message' => 'Please choose valid booking dates.',
-        ]);
-    }
-
-    return $date;
-}
-
 function validateBooking(array $data): array
 {
     $name = trim((string) ($data['name'] ?? ''));
     $phone = preg_replace('/\D+/', '', (string) ($data['phone'] ?? '')) ?? '';
-    $startDateValue = trim((string) ($data['startDate'] ?? ''));
-    $endDateValue = trim((string) ($data['endDate'] ?? ''));
     $honeypot = trim((string) ($data['honeypot'] ?? $data['website'] ?? ''));
     $sourcePage = trim((string) ($data['sourcePage'] ?? ''));
 
@@ -225,26 +208,12 @@ function validateBooking(array $data): array
     }
 
     $timezone = new DateTimeZone(TIMEZONE);
-    $startDate = parseDateValue($startDateValue, $timezone);
-    $endDate = parseDateValue($endDateValue, $timezone);
-
-    if ($endDate < $startDate) {
-        respond(422, [
-            'ok' => false,
-            'message' => 'End date must be after the start date.',
-        ]);
-    }
-
-    $nights = max(1, (int) $startDate->diff($endDate)->format('%a'));
     $bookingId = 'BL-' . (new DateTimeImmutable('now', $timezone))->format('Ymd-His') . '-' . strtoupper(bin2hex(random_bytes(2)));
 
     return [
         'bookingId' => $bookingId,
         'name' => $name,
         'phone' => $phone,
-        'startDate' => $startDate->format('Y-m-d'),
-        'endDate' => $endDate->format('Y-m-d'),
-        'nights' => $nights,
         'sourcePage' => $sourcePage,
         'userAgent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
         'submittedAt' => (new DateTimeImmutable('now', $timezone))->format(DateTimeInterface::ATOM),
@@ -268,36 +237,116 @@ function forwardBooking(array $config, array $booking): array
     return sendToAppsScript($serviceConfig['appsScriptUrl'], $payload, $serviceConfig['timeout']);
 }
 
+function isRedirectStatusCode(int $statusCode): bool
+{
+    return in_array($statusCode, [301, 302, 303, 307, 308], true);
+}
+
+function getHeaderValue(string $headers, string $headerName): string
+{
+    $pattern = '/^' . preg_quote($headerName, '/') . ':\s*(.+)$/mi';
+
+    if (!preg_match_all($pattern, $headers, $matches) || empty($matches[1])) {
+        return '';
+    }
+
+    return trim((string) end($matches[1]));
+}
+
+function resolveRedirectUrl(string $baseUrl, string $location): string
+{
+    $location = trim($location);
+
+    if ($location === '' || preg_match('/^https?:\/\//i', $location)) {
+        return $location;
+    }
+
+    if (str_starts_with($location, '//')) {
+        $baseParts = parse_url($baseUrl);
+        $scheme = $baseParts['scheme'] ?? 'https';
+
+        return $scheme . ':' . $location;
+    }
+
+    if (str_starts_with($location, '/')) {
+        $baseParts = parse_url($baseUrl);
+        $scheme = $baseParts['scheme'] ?? 'https';
+        $host = $baseParts['host'] ?? '';
+
+        return $host === '' ? $location : "{$scheme}://{$host}{$location}";
+    }
+
+    return rtrim(dirname($baseUrl), '/') . '/' . $location;
+}
+
+function sendCurlRequest(string $url, string $method, ?string $payload, int $timeout): array
+{
+    $curl = curl_init($url);
+    $headers = ['Accept: application/json'];
+    $curlOptions = [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HEADER => true,
+        CURLOPT_FOLLOWLOCATION => false,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_CONNECTTIMEOUT => min(10, $timeout),
+        CURLOPT_TIMEOUT => $timeout,
+    ];
+
+    if ($method === 'POST') {
+        $headers[] = 'Content-Type: application/json';
+        $curlOptions[CURLOPT_POST] = true;
+        $curlOptions[CURLOPT_POSTFIELDS] = $payload ?? '';
+    } else {
+        $curlOptions[CURLOPT_HTTPGET] = true;
+    }
+
+    $curlOptions[CURLOPT_HTTPHEADER] = $headers;
+    curl_setopt_array($curl, $curlOptions);
+
+    $response = curl_exec($curl);
+    $statusCode = (int) curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
+    $headerSize = (int) curl_getinfo($curl, CURLINFO_HEADER_SIZE);
+    $error = curl_error($curl);
+    curl_close($curl);
+
+    if ($response === false || $error !== '') {
+        respond(502, [
+            'ok' => false,
+            'message' => 'Booking request could not be saved right now.',
+        ]);
+    }
+
+    return [
+        'statusCode' => $statusCode,
+        'headers' => substr((string) $response, 0, $headerSize) ?: '',
+        'body' => substr((string) $response, $headerSize) ?: '',
+        'url' => $url,
+    ];
+}
+
 function sendToAppsScript(string $appsScriptUrl, string $payload, int $timeout): array
 {
     if (function_exists('curl_init')) {
-        $curl = curl_init($appsScriptUrl);
-        $curlOptions = [
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => $payload,
-            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_TIMEOUT => $timeout,
-        ];
+        $response = sendCurlRequest($appsScriptUrl, 'POST', $payload, $timeout);
+        $redirectsFollowed = 0;
 
-        curl_setopt_array($curl, $curlOptions);
+        while (isRedirectStatusCode($response['statusCode']) && $redirectsFollowed < 5) {
+            $location = resolveRedirectUrl(
+                (string) $response['url'],
+                getHeaderValue((string) $response['headers'], 'Location')
+            );
 
-        $body = curl_exec($curl);
-        $statusCode = (int) curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
-        $error = curl_error($curl);
-        curl_close($curl);
+            if ($location === '') {
+                break;
+            }
 
-        if ($body === false || $error !== '') {
-            respond(502, [
-                'ok' => false,
-                'message' => 'Booking request could not be saved right now.',
-            ]);
+            $response = sendCurlRequest($location, 'GET', null, $timeout);
+            $redirectsFollowed += 1;
         }
 
         return [
-            'statusCode' => $statusCode,
-            'body' => (string) $body,
+            'statusCode' => $response['statusCode'],
+            'body' => (string) $response['body'],
         ];
     }
 

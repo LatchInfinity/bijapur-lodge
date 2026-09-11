@@ -21,11 +21,7 @@
 
 .sticky-booking--open .sticky-booking__panel {
   @apply pointer-events-auto translate-y-0 border border-b-0 p-2.5 opacity-100;
-  max-height: min(calc(100svh - 0.75rem), 36rem);
-}
-
-.sticky-booking__field {
-  @apply relative grid gap-2 rounded-md border border-lodge-ink/10 bg-lodge-linen/45 p-4 transition-all duration-500 ease-out;
+  max-height: min(calc(100svh - 0.75rem), 28rem);
 }
 
 .sticky-booking__trap {
@@ -35,6 +31,10 @@
 
 .sticky-booking__close {
   @apply hidden;
+}
+
+.sticky-booking__field {
+  @apply relative grid gap-2 rounded-md border border-lodge-ink/10 bg-lodge-linen/45 p-4 transition-all duration-500 ease-out;
 }
 
 .sticky-booking__field label {
@@ -62,33 +62,40 @@
   transition: background-color 9999s ease-out;
 }
 
-.sticky-booking__field .sticky-booking__native-date {
-  @apply absolute bottom-0 left-0 h-px w-px opacity-0;
-  min-width: 0;
-  pointer-events: none;
+.sticky-booking__submit {
+  @apply h-12 min-h-12 rounded-md bg-lodge-linen px-6 text-sm font-semibold uppercase tracking-[0.14em] text-lodge-ink transition hover:bg-[#F4EBE6] disabled:cursor-not-allowed disabled:opacity-40 sm:min-w-32;
 }
 
 .sticky-booking__field--phone,
-.sticky-booking__date-row {
+.sticky-booking__submit {
   max-height: 0;
   opacity: 0;
   overflow: hidden;
-  padding-bottom: 0;
-  padding-top: 0;
   pointer-events: none;
   transform: translateY(1rem);
 }
 
+.sticky-booking__field--phone {
+  padding-bottom: 0;
+  padding-top: 0;
+}
+
+.sticky-booking__submit {
+  height: 0;
+  min-height: 0;
+  padding-bottom: 0;
+  padding-top: 0;
+}
+
 .sticky-booking--step-phone .sticky-booking__field--name,
-.sticky-booking--step-date .sticky-booking__field--name,
-.sticky-booking--step-date .sticky-booking__field--phone {
+.sticky-booking--step-ready .sticky-booking__field--name,
+.sticky-booking--step-ready .sticky-booking__field--phone {
   @apply bg-lodge-linen/35;
   transform: translateY(-0.35rem);
 }
 
 .sticky-booking--step-phone .sticky-booking__field--phone,
-.sticky-booking--step-date .sticky-booking__field--phone,
-.sticky-booking--step-date .sticky-booking__date-row {
+.sticky-booking--step-ready .sticky-booking__field--phone {
   max-height: 9rem;
   opacity: 1;
   padding-bottom: 1rem;
@@ -97,37 +104,15 @@
   transform: translateY(0);
 }
 
-.sticky-booking--step-date .sticky-booking__date-row {
-  max-height: 28rem;
-  overflow: visible;
-}
-
-.sticky-booking__date-row {
-  @apply grid gap-3 transition-all duration-500 ease-out;
-}
-
-.sticky-booking__dates {
-  @apply grid gap-3;
-}
-
-.sticky-booking__field--date {
-  @apply min-w-0 cursor-pointer;
-}
-
-.sticky-booking__field--date input {
-  @apply cursor-pointer;
-}
-
-.sticky-booking__date-value {
-  @apply flex h-10 w-full min-w-0 items-center border-0 bg-transparent p-0 text-left text-base text-lodge-ink outline-none sm:text-sm;
-}
-
-.sticky-booking__date-value--empty {
-  @apply text-lodge-ink/40;
-}
-
-.sticky-booking__submit {
-  @apply h-12 min-h-12 rounded-md bg-lodge-linen px-6 text-sm font-semibold uppercase tracking-[0.14em] text-lodge-ink transition hover:bg-[#F4EBE6] disabled:cursor-not-allowed disabled:opacity-40 sm:min-w-32;
+.sticky-booking--step-ready .sticky-booking__submit {
+  height: 3rem;
+  max-height: 4rem;
+  min-height: 3rem;
+  opacity: 1;
+  padding-bottom: 0;
+  padding-top: 0;
+  pointer-events: auto;
+  transform: translateY(0);
 }
 
 .sticky-booking__error {
@@ -153,31 +138,18 @@
     @apply h-9;
   }
 
-  .sticky-booking__date-value {
-    @apply h-9;
-  }
-
-  .sticky-booking__dates {
-    @apply gap-2.5;
-  }
-
   .sticky-booking--step-phone .sticky-booking__field--phone,
-  .sticky-booking--step-date .sticky-booking__field--phone,
-  .sticky-booking--step-date .sticky-booking__date-row {
+  .sticky-booking--step-ready .sticky-booking__field--phone {
     padding-bottom: 0.75rem;
     padding-top: 0.75rem;
   }
 
   .sticky-booking__panel {
-    max-height: min(calc(100svh - 0.75rem), 36rem);
+    max-height: min(calc(100svh - 0.75rem), 30rem);
   }
 
   .sticky-booking:not(.sticky-booking--open) .sticky-booking__panel {
     max-height: 0;
-  }
-
-  .sticky-booking--step-date .sticky-booking__date-row {
-    max-height: none;
   }
 
   .sticky-booking__submit {
@@ -195,26 +167,21 @@
   }
 
   .sticky-booking__panel {
-    @apply pointer-events-auto max-w-none translate-y-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.15fr)] items-stretch gap-4 rounded-none border border-x-0 border-b-0 border-lodge-ink/10 p-4 opacity-100 transition-none;
+    @apply pointer-events-auto max-w-none translate-y-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-stretch gap-4 rounded-none border border-x-0 border-b-0 border-lodge-ink/10 p-4 opacity-100 transition-none;
     max-height: none;
   }
 
   .sticky-booking__field,
-  .sticky-booking__date-row {
+  .sticky-booking__submit {
     @apply transition-none;
-  }
-
-  .sticky-booking__field,
-  .sticky-booking__date-row,
-  .sticky-booking__dates {
     height: 100%;
   }
 
   .sticky-booking__field--phone,
-  .sticky-booking__date-row,
+  .sticky-booking__submit,
   .sticky-booking--step-phone .sticky-booking__field--phone,
-  .sticky-booking--step-date .sticky-booking__field--phone,
-  .sticky-booking--step-date .sticky-booking__date-row {
+  .sticky-booking--step-ready .sticky-booking__field--phone,
+  .sticky-booking--step-ready .sticky-booking__submit {
     max-height: none;
     opacity: 1;
     overflow: visible;
@@ -226,21 +193,8 @@
     padding: 1rem;
   }
 
-  .sticky-booking__date-row {
-    @apply grid-cols-[minmax(0,1fr)_auto] items-stretch;
-    padding: 0;
-  }
-
-  .sticky-booking--step-date .sticky-booking__date-row {
-    padding: 0;
-  }
-
-  .sticky-booking__dates {
-    @apply grid-cols-2;
-  }
-
   .sticky-booking__submit {
-    @apply h-full min-h-24;
+    @apply min-h-24 px-8;
   }
 
   .sticky-booking__error {
@@ -248,8 +202,8 @@
   }
 
   .sticky-booking--step-phone .sticky-booking__field--name,
-  .sticky-booking--step-date .sticky-booking__field--name,
-  .sticky-booking--step-date .sticky-booking__field--phone {
+  .sticky-booking--step-ready .sticky-booking__field--name,
+  .sticky-booking--step-ready .sticky-booking__field--phone {
     @apply bg-lodge-linen/45;
     transform: none;
   }

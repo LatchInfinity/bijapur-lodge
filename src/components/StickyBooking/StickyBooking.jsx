@@ -6,26 +6,13 @@ const getDigitsOnly = (value) => value.replace(/\D/g, "");
 const getPhoneValue = (value) => getDigitsOnly(value).slice(0, 10);
 const getNameValue = (value) => value.replace(/[0-9]/g, "");
 const MOBILE_BOOKING_QUERY = "(max-width: 639px)";
-const formatIndianDate = (value) => {
-  if (!value) {
-    return "dd/mm/yyyy";
-  }
-
-  const [year, month, day] = value.split("-");
-
-  return `${day}/${month}/${year}`;
-};
 
 export default function StickyBooking({ onBookingComplete }) {
   const bookingRef = useRef(null);
-  const startDateInputRef = useRef(null);
-  const endDateInputRef = useRef(null);
   const openScrollPositionRef = useRef(0);
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
   const [website, setWebsite] = useState("");
   const [submitStatus, setSubmitStatus] = useState("idle");
   const [submitError, setSubmitError] = useState("");
@@ -34,37 +21,10 @@ export default function StickyBooking({ onBookingComplete }) {
   const phoneDigits = useMemo(() => getDigitsOnly(phone), [phone]);
   const hasName = name.trim().length >= 2;
   const hasPhone = hasName && phoneDigits.length >= 10;
-  const hasValidDateRange = Boolean(startDate && endDate && endDate >= startDate);
   const isSubmitting = submitStatus === "submitting";
   const isSent = submitStatus === "sent";
-  const step = hasPhone ? "date" : hasName ? "phone" : "name";
-  const canSubmit = hasName && hasPhone && hasValidDateRange && !isSubmitting && !isSent;
-
-  const openDatePicker = (inputRef) => {
-    const dateInput = inputRef.current;
-
-    if (!dateInput) {
-      return;
-    }
-
-    dateInput.focus();
-
-    if (typeof dateInput.showPicker === "function") {
-      try {
-        dateInput.showPicker();
-      } catch {
-        dateInput.focus();
-      }
-    }
-  };
-
-  const handleStartDateChange = (value) => {
-    setStartDate(value);
-
-    if (endDate && value && endDate < value) {
-      setEndDate("");
-    }
-  };
+  const step = hasPhone ? "ready" : hasName ? "phone" : "name";
+  const canSubmit = hasName && hasPhone && !isSubmitting && !isSent;
 
   const handleOpenBooking = () => {
     openScrollPositionRef.current = window.scrollY;
@@ -140,8 +100,6 @@ export default function StickyBooking({ onBookingComplete }) {
       await submitBooking({
         name: name.trim(),
         phone: phoneDigits,
-        startDate,
-        endDate,
         sourcePage: window.location.href,
         honeypot: website,
       });
@@ -225,72 +183,13 @@ export default function StickyBooking({ onBookingComplete }) {
           />
         </div>
 
-        <div className="sticky-booking__date-row">
-          <div className="sticky-booking__dates">
-            <div
-              className="sticky-booking__field sticky-booking__field--date"
-              onClick={() => openDatePicker(startDateInputRef)}
-            >
-              <label htmlFor="sticky-booking-start-date">Start Date</label>
-              <input
-                ref={startDateInputRef}
-                className="sticky-booking__native-date"
-                id="sticky-booking-start-date"
-                name="startDate"
-                type="date"
-                tabIndex={-1}
-                value={startDate}
-                onChange={(event) => handleStartDateChange(event.target.value)}
-              />
-              <button
-                className={`sticky-booking__date-value ${startDate ? "" : "sticky-booking__date-value--empty"}`}
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  openDatePicker(startDateInputRef);
-                }}
-              >
-                {formatIndianDate(startDate)}
-              </button>
-            </div>
-
-            <div
-              className="sticky-booking__field sticky-booking__field--date"
-              onClick={() => openDatePicker(endDateInputRef)}
-            >
-              <label htmlFor="sticky-booking-end-date">End Date</label>
-              <input
-                ref={endDateInputRef}
-                className="sticky-booking__native-date"
-                id="sticky-booking-end-date"
-                name="endDate"
-                type="date"
-                min={startDate || undefined}
-                tabIndex={-1}
-                value={endDate}
-                onChange={(event) => setEndDate(event.target.value)}
-              />
-              <button
-                className={`sticky-booking__date-value ${endDate ? "" : "sticky-booking__date-value--empty"}`}
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  openDatePicker(endDateInputRef);
-                }}
-              >
-                {formatIndianDate(endDate)}
-              </button>
-            </div>
-          </div>
-
-          <button
-            className="sticky-booking__submit"
-            type="submit"
-            disabled={!canSubmit}
-          >
-            {isSubmitting ? "Sending..." : isSent ? "Sent" : "Book"}
-          </button>
-        </div>
+        <button
+          className="sticky-booking__submit"
+          type="submit"
+          disabled={!canSubmit}
+        >
+          {isSubmitting ? "Sending..." : isSent ? "Sent" : "Book"}
+        </button>
 
         {submitError ? (
           <p className="sticky-booking__error" role="alert">
