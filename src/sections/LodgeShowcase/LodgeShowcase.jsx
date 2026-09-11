@@ -5,87 +5,128 @@ import {
 } from "../../config/lodgeGallery.config.js";
 import "./LodgeShowcase.css";
 
-const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+const canUseHoverAutoScroll = () => (
+  typeof window !== "undefined"
+  && window.matchMedia("(hover: hover) and (pointer: fine)").matches
+);
 
 export default function LodgeShowcase() {
-  const sectionRef = useRef(null);
   const viewportRef = useRef(null);
-  const trackRef = useRef(null);
-  const isTickingRef = useRef(false);
+  const animationFrameRef = useRef(null);
+  const lastFrameTimeRef = useRef(0);
+  const isTouchInteractionRef = useRef(false);
+  const touchResetTimerRef = useRef(null);
 
-  const updateTrackPosition = useCallback(() => {
-    const section = sectionRef.current;
-    const viewport = viewportRef.current;
-    const track = trackRef.current;
-
-    if (!section || !viewport || !track) {
-      return;
+  const stopAutoScroll = useCallback(() => {
+    if (animationFrameRef.current) {
+      window.cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
     }
 
-    const rect = section.getBoundingClientRect();
-    const scrollableDistance = Math.max(section.offsetHeight - window.innerHeight, 1);
-    const progress = clamp(-rect.top / scrollableDistance, 0, 1);
-    const horizontalDistance = Math.max(track.scrollWidth - viewport.clientWidth, 0);
-
-    track.style.transform = `translate3d(${-horizontalDistance * progress}px, 0, 0)`;
+    lastFrameTimeRef.current = 0;
   }, []);
 
-  const queueTrackUpdate = useCallback(() => {
-    if (isTickingRef.current) {
+  const runAutoScroll = useCallback((timestamp) => {
+    const viewport = viewportRef.current;
+
+    if (!viewport) {
+      stopAutoScroll();
       return;
     }
 
-    isTickingRef.current = true;
-    window.requestAnimationFrame(() => {
-      updateTrackPosition();
-      isTickingRef.current = false;
-    });
-  }, [updateTrackPosition]);
+    const maxScrollLeft = viewport.scrollWidth - viewport.clientWidth;
 
-  useEffect(() => {
-    updateTrackPosition();
+    if (maxScrollLeft <= 0) {
+      stopAutoScroll();
+      return;
+    }
 
-    window.addEventListener("scroll", queueTrackUpdate, { passive: true });
-    window.addEventListener("resize", queueTrackUpdate);
+    if (!lastFrameTimeRef.current) {
+      lastFrameTimeRef.current = timestamp;
+    }
 
-    return () => {
-      window.removeEventListener("scroll", queueTrackUpdate);
-      window.removeEventListener("resize", queueTrackUpdate);
-    };
-  }, [queueTrackUpdate, updateTrackPosition]);
+    const elapsedSeconds = (timestamp - lastFrameTimeRef.current) / 1000;
+    const nextScrollLeft = viewport.scrollLeft + LODGE_GALLERY_CONFIG.autoScrollSpeed * elapsedSeconds;
+
+    viewport.scrollLeft = nextScrollLeft >= maxScrollLeft ? 0 : nextScrollLeft;
+    lastFrameTimeRef.current = timestamp;
+    animationFrameRef.current = window.requestAnimationFrame(runAutoScroll);
+  }, [stopAutoScroll]);
+
+  const startAutoScroll = useCallback(() => {
+    if (animationFrameRef.current) {
+      return;
+    }
+
+    animationFrameRef.current = window.requestAnimationFrame(runAutoScroll);
+  }, [runAutoScroll]);
+
+  const handleAutoScrollStart = useCallback(() => {
+    if (isTouchInteractionRef.current || !canUseHoverAutoScroll()) {
+      return;
+    }
+
+    startAutoScroll();
+  }, [startAutoScroll]);
+
+  const pauseTouchAutoScroll = useCallback(() => {
+    isTouchInteractionRef.current = true;
+    stopAutoScroll();
+    window.clearTimeout(touchResetTimerRef.current);
+
+    touchResetTimerRef.current = window.setTimeout(() => {
+      isTouchInteractionRef.current = false;
+    }, 400);
+  }, [stopAutoScroll]);
+
+  const handlePointerDown = useCallback((event) => {
+    if (event.pointerType === "touch" || event.pointerType === "pen") {
+      pauseTouchAutoScroll();
+    }
+  }, [pauseTouchAutoScroll]);
+
+  useEffect(() => () => {
+    stopAutoScroll();
+    window.clearTimeout(touchResetTimerRef.current);
+  }, [stopAutoScroll]);
 
   return (
     <section
       className="lodge-showcase"
       id="lodges"
-      ref={sectionRef}
-      style={{
-        "--lodge-showcase-height": LODGE_GALLERY_CONFIG.scrollHeight,
-        "--lodge-showcase-height-mobile": LODGE_GALLERY_CONFIG.mobileScrollHeight,
-      }}
+      aria-labelledby="lodge-showcase-heading"
     >
-      <div className="lodge-showcase__sticky">
-        <div className="lodge-showcase__header page-gutter">
-          <p>{LODGE_GALLERY_CONFIG.sectionLabel}</p>
-        </div>
+      <div className="lodge-showcase__header page-gutter">
+        <p id="lodge-showcase-heading">{LODGE_GALLERY_CONFIG.sectionLabel}</p>
+      </div>
 
-        <div className="lodge-showcase__viewport" ref={viewportRef}>
-          <div className="lodge-showcase__track" ref={trackRef}>
-            {lodgeImages.map((image) => (
-              <article
-                className="lodge-showcase__card"
-                key={image.id}
-              >
-                <img
-                  className="lodge-showcase__image"
-                  src={image.src}
-                  alt={image.alt}
-                  loading="lazy"
-                  decoding="async"
-                />
-              </article>
-            ))}
-          </div>
+      <div
+        className="lodge-showcase__viewport"
+        ref={viewportRef}
+        onMouseEnter={handleAutoScrollStart}
+        onMouseLeave={stopAutoScroll}
+        onFocus={handleAutoScrollStart}
+        onBlur={stopAutoScroll}
+        onPointerDown={handlePointerDown}
+        onTouchStart={pauseTouchAutoScroll}
+        tabIndex={0}
+        aria-label="Bijapur Lodge views gallery"
+      >
+        <div className="lodge-showcase__track">
+          {lodgeImages.map((image) => (
+            <article
+              className="lodge-showcase__card"
+              key={image.id}
+            >
+              <img
+                className="lodge-showcase__image"
+                src={image.src}
+                alt={image.alt}
+                loading="lazy"
+                decoding="async"
+              />
+            </article>
+          ))}
         </div>
       </div>
     </section>

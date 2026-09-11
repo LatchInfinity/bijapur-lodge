@@ -45,13 +45,16 @@ function doPost(event) {
 
     return jsonResponse_({
       ok: true,
+      saved: true,
       bookingId: booking.bookingId,
       message: 'Booking request saved.',
     });
   } catch (error) {
+    console.error(error);
+
     return jsonResponse_({
       ok: false,
-      message: 'Booking request could not be saved.',
+      message: getPublicErrorMessage_(error),
     });
   } finally {
     if (isLocked) {
@@ -143,6 +146,32 @@ function ensureHeaders_(sheet) {
   if (extraHeaderColumns > 0) {
     sheet.getRange(1, BOOKING_HEADERS.length + 1, 1, extraHeaderColumns).clearContent();
   }
+}
+
+function getPublicErrorMessage_(error) {
+  const message = error && error.message ? String(error.message) : '';
+
+  if (message.includes('Invalid name')) {
+    return 'Please enter a valid name.';
+  }
+
+  if (message.includes('Invalid phone')) {
+    return 'Please enter a 10 digit phone number.';
+  }
+
+  if (message.includes('Missing SHEET_URL') || message.includes('openByUrl')) {
+    return 'Google Sheet could not be opened. Check SHEET_URL and Sheet access.';
+  }
+
+  if (message.includes('appendRow') || message.includes('permissions')) {
+    return 'Google Sheet could not be updated. Check Sheet permissions.';
+  }
+
+  if (message.includes('Invalid dates')) {
+    return 'Apps Script is still using an old deployment. Redeploy the latest Code.gs version.';
+  }
+
+  return 'Booking request could not be saved.';
 }
 
 function createBookingId_() {

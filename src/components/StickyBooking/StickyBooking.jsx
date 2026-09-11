@@ -6,6 +6,25 @@ const getDigitsOnly = (value) => value.replace(/\D/g, "");
 const getPhoneValue = (value) => getDigitsOnly(value).slice(0, 10);
 const getNameValue = (value) => value.replace(/[0-9]/g, "");
 const MOBILE_BOOKING_QUERY = "(max-width: 639px)";
+const GENERIC_SUBMIT_ERROR = "We could not send your booking request. Please try again.";
+
+const getBookingValidationError = ({ name, phoneDigits }) => {
+  const trimmedName = name.trim();
+
+  if (trimmedName.length < 2) {
+    return "Please enter your name.";
+  }
+
+  if (/\d/.test(trimmedName)) {
+    return "Name should not contain numbers.";
+  }
+
+  if (phoneDigits.length !== 10) {
+    return "Please enter a 10 digit phone number.";
+  }
+
+  return "";
+};
 
 export default function StickyBooking({ onBookingComplete }) {
   const bookingRef = useRef(null);
@@ -89,7 +108,20 @@ export default function StickyBooking({ onBookingComplete }) {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (!canSubmit) {
+    if (!isOpen) {
+      handleOpenBooking();
+      return;
+    }
+
+    const validationError = getBookingValidationError({ name, phoneDigits });
+
+    if (validationError) {
+      setSubmitStatus("idle");
+      setSubmitError(validationError);
+      return;
+    }
+
+    if (isSubmitting || isSent) {
       return;
     }
 
@@ -97,7 +129,7 @@ export default function StickyBooking({ onBookingComplete }) {
     setSubmitError("");
 
     try {
-      await submitBooking({
+      const result = await submitBooking({
         name: name.trim(),
         phone: phoneDigits,
         sourcePage: window.location.href,
@@ -105,13 +137,13 @@ export default function StickyBooking({ onBookingComplete }) {
       });
 
       setSubmitStatus("sent");
-      onBookingComplete?.();
+      onBookingComplete?.(result);
     } catch (error) {
       setSubmitStatus("idle");
       setSubmitError(
         error instanceof Error
           ? error.message
-          : "We could not send your booking request. Please try again."
+          : GENERIC_SUBMIT_ERROR
       );
     }
   };
@@ -123,14 +155,6 @@ export default function StickyBooking({ onBookingComplete }) {
       id="booking"
       aria-label="Quick lodge booking"
     >
-      <button
-        className="sticky-booking__launcher"
-        type="button"
-        onClick={handleOpenBooking}
-      >
-        Book Now
-      </button>
-
       <form className="sticky-booking__panel" onSubmit={handleSubmit} aria-busy={isSubmitting}>
         <div className="sticky-booking__trap" aria-hidden="true">
           <label htmlFor="sticky-booking-website">Website</label>
@@ -163,7 +187,10 @@ export default function StickyBooking({ onBookingComplete }) {
             autoComplete="name"
             value={name}
             placeholder="Your name"
-            onChange={(event) => setName(getNameValue(event.target.value))}
+            onChange={(event) => {
+              setName(getNameValue(event.target.value));
+              setSubmitError("");
+            }}
           />
         </div>
 
@@ -179,16 +206,20 @@ export default function StickyBooking({ onBookingComplete }) {
             placeholder="10 digit mobile number"
             maxLength={10}
             pattern="[0-9]{10}"
-            onChange={(event) => setPhone(getPhoneValue(event.target.value))}
+            onChange={(event) => {
+              setPhone(getPhoneValue(event.target.value));
+              setSubmitError("");
+            }}
           />
         </div>
 
         <button
           className="sticky-booking__submit"
           type="submit"
-          disabled={!canSubmit}
+          aria-expanded={isOpen}
+          disabled={isOpen && !canSubmit}
         >
-          {isSubmitting ? "Sending..." : isSent ? "Sent" : "Book"}
+          {!isOpen ? "Book Now" : isSubmitting ? "Sending..." : isSent ? "Sent" : "Book"}
         </button>
 
         {submitError ? (

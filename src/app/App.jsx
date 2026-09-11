@@ -1,19 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Header from "../components/Header/Header.jsx";
 import Footer from "../components/Footer/Footer.jsx";
-import StickyBooking from "../components/StickyBooking/StickyBooking.jsx";
 import HeroBanner from "../sections/HeroBanner/HeroBanner.jsx";
 import LodgeShowcase from "../sections/LodgeShowcase/LodgeShowcase.jsx";
 import ThankYouPage from "../pages/ThankYouPage/ThankYouPage.jsx";
-import { initializeMetaPixel, trackMetaLead, trackMetaPageView } from "../services/metaPixel.js";
+import { initializeMetaPixel, trackMetaBookButton, trackMetaPageView } from "../services/metaPixel.js";
 import "./App.css";
 
 const ROUTE_TRANSITION_DURATION = 420;
+const THANK_YOU_REDIRECT_DELAY = 3000;
+const STAYFLEXI_BOOKING_URL = "https://bookingengine.stayflexi.com/?hotel_id=39240";
 const THANK_YOU_PAGE = "thank-you";
 const LANDING_PAGE = "landing";
 const HOME_PATH = import.meta.env.BASE_URL || "/";
 const CLEAN_HOME_PATH = HOME_PATH.endsWith("/") ? HOME_PATH : `${HOME_PATH}/`;
-const ROOT_SITE_PATH = "/";
 const THANK_YOU_PATH = `${CLEAN_HOME_PATH}thank-you`;
 const THANK_YOU_ACCESS_KEY = "bijapurLodgeBookingComplete";
 const THANK_YOU_ROUTE_STATE = {
@@ -52,6 +52,7 @@ export default function App() {
   const transitionTimeoutRef = useRef(null);
   const transitionFrameRef = useRef(null);
   const hasTrackedLeadRef = useRef(false);
+  const hasTrackedLandingPageRef = useRef(false);
   const [activePage, setActivePage] = useState(getPageFromLocation);
   const [transitionState, setTransitionState] = useState("entered");
 
@@ -130,13 +131,25 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    trackMetaPageView(activePage === THANK_YOU_PAGE ? "Thank You" : "Landing");
+    if (activePage !== LANDING_PAGE || hasTrackedLandingPageRef.current) {
+      return;
+    }
+
+    hasTrackedLandingPageRef.current = true;
+    trackMetaPageView("Landing");
   }, [activePage]);
 
-  const handleBookingComplete = () => {
+  const handleBookingComplete = (bookingResult) => {
+    if (
+      bookingResult?.ok !== true
+      || !bookingResult?.bookingId
+    ) {
+      return;
+    }
+
     if (!hasTrackedLeadRef.current) {
       hasTrackedLeadRef.current = true;
-      trackMetaLead();
+      trackMetaBookButton();
     }
 
     transitionToPage(THANK_YOU_PAGE, {
@@ -146,28 +159,17 @@ export default function App() {
     });
   };
 
-  const handleThankYouExit = () => {
-    window.clearTimeout(transitionTimeoutRef.current);
-
-    if (transitionFrameRef.current) {
-      window.cancelAnimationFrame(transitionFrameRef.current);
-    }
-
-    setTransitionState("exiting");
-
-    transitionTimeoutRef.current = window.setTimeout(() => {
-      window.location.assign(ROOT_SITE_PATH);
-    }, ROUTE_TRANSITION_DURATION);
-  };
-
   const isThankYouPage = activePage === THANK_YOU_PAGE;
 
   return (
     <div className="app-shell">
-      <Header />
+      <Header onBookingComplete={handleBookingComplete} hideBooking={isThankYouPage} />
       <div className={`app-route app-route--${transitionState}`}>
         {isThankYouPage ? (
-          <ThankYouPage homeHref={ROOT_SITE_PATH} onBack={handleThankYouExit} />
+          <ThankYouPage
+            redirectDelay={THANK_YOU_REDIRECT_DELAY}
+            redirectUrl={STAYFLEXI_BOOKING_URL}
+          />
         ) : (
           <>
             <main>
@@ -175,7 +177,6 @@ export default function App() {
               <LodgeShowcase />
             </main>
             <Footer />
-            <StickyBooking onBookingComplete={handleBookingComplete} />
           </>
         )}
       </div>

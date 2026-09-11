@@ -7,16 +7,16 @@
 }
 
 .site-header--scrolled .site-header__brand {
-  color: #B48F30;
+  color: #1e1211;
 }
 
 .site-header__inner {
-  @apply flex items-center;
+  @apply flex items-center justify-between;
 }
 
 .site-header__brand {
   @apply inline-flex min-w-0 items-center no-underline;
-  color: #B48F30;
+  color: #1e1211;
 }
 
 .site-header__brand-text {
@@ -26,4 +26,167 @@
   font-variant-ligatures: common-ligatures discretionary-ligatures contextual;
   letter-spacing: 0;
   line-height: 0.85;
+}
+
+.site-header__book-btn {
+  @apply rounded-none bg-[#1e1211]/95 px-5 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white transition hover:bg-lodge-charcoal;
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ── Dropdown booking panel ─────────────────────────────── */
+
+.header-booking {
+  @apply pointer-events-none absolute left-0 right-0 z-50 overflow-hidden transition-all duration-300 ease-out;
+  max-height: 0;
+  opacity: 0;
+}
+
+.header-booking--open {
+  @apply pointer-events-auto;
+  max-height: 32rem;
+  opacity: 1;
+}
+
+.header-booking__panel {
+  @apply mx-auto flex w-full max-w-7xl justify-end px-4 sm:px-8 lg:max-w-none lg:px-8;
+}
+
+.header-booking__sheet {
+  @apply flex w-full max-w-md flex-col gap-0 border-b border-lodge-ink/10 bg-[#E0D5CE]/95 px-2 pb-4 pt-4 shadow-header backdrop-blur-xl;
+  border-radius: 0 0 0.75rem 0.75rem;
+}
+
+.header-booking__trap {
+  @apply pointer-events-none absolute h-px w-px overflow-hidden opacity-0;
+  left: -9999px;
+}
+
+/* ── Fields: hidden by default, reveal one by one ───────── */
+
+.header-booking .header-booking__field,
+.header-booking .header-booking__submit {
+  @apply overflow-hidden transition-all ease-out;
+  transition-duration: 400ms;
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  border-width: 0;
+  margin: 0;
+  pointer-events: none;
+}
+
+/* Name + phone: card style when revealed */
+.header-booking--open .header-booking__field--name,
+.header-booking--step-phone .header-booking__field--phone,
+.header-booking--step-ready .header-booking__field--phone {
+  max-height: 8rem;
+  opacity: 1;
+  padding: 1rem 1.25rem;
+  border-width: 1px;
+  border-style: solid;
+  border-color: rgba(17, 16, 13, 0.12);
+  border-radius: 0.5rem;
+  background-color: rgba(244, 239, 229, 0.5);
+  pointer-events: auto;
+}
+
+/* Name sits right under the panel padding; phone gets a gap above it */
+.header-booking--open .header-booking__field--name {
+  margin-top: 0;
+}
+
+.header-booking--step-phone .header-booking__field--phone,
+.header-booking--step-ready .header-booking__field--phone {
+  margin-top: 0.75rem;
+}
+
+/* Gold highlight on the focused card */
+.header-booking__panel .header-booking__field:focus-within {
+  border-color: rgba(180, 143, 48, 0.55);
+  background-color: rgba(244, 239, 229, 0.75);
+}
+
+/* Submit: always visible when open (disabled until valid) */
+.header-booking--open .header-booking__submit {
+  max-height: 5rem;
+  opacity: 1;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  margin: 0.75rem 0 0;
+  pointer-events: auto;
+}
+
+/* ── Field styling ──────────────────────────────────────── */
+
+.header-booking__field {
+  @apply relative;
+}
+
+.header-booking__field label {
+  @apply text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-lodge-ink/55;
+}
+
+.header-booking__field input {
+  @apply h-10 w-full min-w-0 appearance-none border-0 bg-transparent p-0 text-base text-lodge-ink outline-none placeholder:text-lodge-ink/40 sm:text-sm;
+  color-scheme: light;
+}
+
+.header-booking__field input:focus,
+.header-booking__field input:active {
+  background-color: transparent;
+  box-shadow: none;
+}
+
+.header-booking__field input:-webkit-autofill,
+.header-booking__field input:-webkit-autofill:hover,
+.header-booking__field input:-webkit-autofill:focus,
+.header-booking__field input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px rgba(244, 239, 229, 0.45) inset;
+  -webkit-text-fill-color: #11100d;
+  caret-color: #11100d;
+  transition: background-color 9999s ease-out;
+}
+
+.header-booking__submit {
+  @apply w-full rounded-md bg-lodge-linen px-6 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-lodge-ink transition hover:bg-[#F4EBE6] disabled:cursor-not-allowed disabled:opacity-40;
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+.header-booking__error {
+  @apply mt-3 rounded-md border border-red-900/20 bg-red-900/10 px-4 py-3 text-sm font-medium text-red-950;
+}
+
+/* ── Desktop ────────────────────────────────────────────── */
+
+@media (min-width: 640px) {
+  .site-header__inner {
+    @apply justify-end lg:min-h-8;
+  }
+
+  .site-header__brand {
+    @apply absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2;
+  }
+
+  .site-header__book-btn {
+    @apply translate-x-[2rem] lg:absolute lg:right-8 lg:top-1/2 lg:translate-x-0 lg:-translate-y-1/2;
+  }
+
+  .header-booking__sheet {
+    @apply translate-x-[2rem] lg:translate-x-0;
+  }
+
+  .header-booking__field input {
+    @apply h-8;
+  }
+}
+
+/* ── Mobile ─────────────────────────────────────────────── */
+
+@media (max-width: 639px) {
+  .header-booking__field input {
+    @apply h-9;
+  }
 }

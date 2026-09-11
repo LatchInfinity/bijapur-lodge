@@ -1,6 +1,9 @@
 import "./Footer.css";
 
 export default function Footer() {
+  const currentYear = new Date().getFullYear();
+  const copyrightYears = currentYear > 2021 ? `2021–${currentYear}` : "2021";
+
   return (
     <footer className="site-footer page-gutter" id="contact">
       <div className="site-footer__inner content-width">
@@ -25,7 +28,7 @@ export default function Footer() {
       </div>
 
       <div className="site-footer__bottom content-width">
-        <span>© {new Date().getFullYear()} Bijapur Lodge</span>
+        <span>© {copyrightYears} Bijapur Lodge</span>
         <span>Built for quiet arrivals and scenic stays.</span>
       </div>
     </footer>

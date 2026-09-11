@@ -482,6 +482,7 @@ if (
 
 respond(200, [
     'ok' => true,
+    'saved' => true,
     'bookingId' => $appsScriptResult['bookingId'] ?? $booking['bookingId'],
     'message' => 'Booking request saved.',
 ]);

@@ -57,14 +57,14 @@ export function trackMetaPageView(pageName) {
   });
 }
 
-export function trackMetaLead() {
+export function trackMetaBookButton() {
   if (!canUsePixel()) {
     return;
   }
 
   initializeMetaPixel();
   getFbq()("track", "Lead", {
-    content_name: "Bijapur Lodge Booking",
+    content_name: "Bijapur Lodge Book Button",
     content_category: "Lodge Stay",
   });
 }
