@@ -163,7 +163,7 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <Header onBookingComplete={handleBookingComplete} />
+      <Header onBookingComplete={handleBookingComplete} hideBooking={isThankYouPage} />
       <div className={`app-route app-route--${transitionState}`}>
         {isThankYouPage ? (
           <ThankYouPage

@@ -25,7 +25,7 @@ const getBookingValidationError = ({ name, phoneDigits }) => {
   return "";
 };
 
-export default function Header({ onBookingComplete }) {
+export default function Header({ onBookingComplete, hideBooking = false }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState("");
@@ -118,6 +118,7 @@ export default function Header({ onBookingComplete }) {
         <a className="site-header__brand" href="#hero" aria-label="Bijapur Lodge home">
           <span className="site-header__brand-text">Bijapur Lodge</span>
         </a>
+        {!hideBooking && (
         <button
           className="site-header__book-btn"
           type="button"
@@ -125,16 +126,31 @@ export default function Header({ onBookingComplete }) {
           aria-expanded={isOpen}
           aria-controls="header-booking-panel"
         >
-          Book Now
+          Reserve
         </button>
+        )}
       </div>
 
+      {!hideBooking && (
       <div
         ref={panelRef}
         id="header-booking-panel"
         className={`header-booking ${isOpen ? "header-booking--open" : ""} header-booking--step-${step}`}
       >
         <div className="header-booking__panel">
+        <div className="header-booking__sheet">
+          <div className="header-booking__trap" aria-hidden="true">
+            <label htmlFor="header-booking-website">Website</label>
+            <input
+              id="header-booking-website"
+              name="website"
+              type="text"
+              tabIndex={-1}
+              autoComplete="off"
+              value={website}
+              onChange={(event) => setWebsite(event.target.value)}
+            />
+          </div>
 
           <div className="header-booking__field header-booking__field--name">
             <label htmlFor="header-booking-name">Name</label>
@@ -177,7 +193,7 @@ export default function Header({ onBookingComplete }) {
             disabled={!canSubmit}
             onClick={handleSubmit}
           >
-            {isSubmitting ? "Sending..." : isSent ? "Sent" : "Book"}
+            {isSubmitting ? "Sending..." : isSent ? "Sent" : "Submit"}
           </button>
 
           {submitError ? (
@@ -186,8 +202,10 @@ export default function Header({ onBookingComplete }) {
             </p>
           ) : null}
 
+          </div>
         </div>
       </div>
+      )}
     </header>
   );
 }
