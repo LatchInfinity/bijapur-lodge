@@ -1,35 +1,11 @@
 .hero-banner {
-  @apply relative z-10 bg-[#F4EBE6];
-  height: var(--hero-scroll-height);
+  @apply relative z-10 min-h-[100svh] overflow-hidden bg-[#e0d5ce] px-2 sm:px-3 lg:px-4;
 }
 
-.hero-banner__sticky {
-  @apply sticky top-0 h-[100svh] min-h-[100svh] overflow-hidden bg-[#F4EBE6];
+.hero-banner__picture {
+  @apply block h-[100svh] min-h-[100svh] w-full;
 }
 
-.hero-banner__hook {
-  @apply pointer-events-none absolute inset-0 z-10 grid place-items-center px-5 text-center opacity-100 transition-opacity duration-300 ease-out;
-}
-
-.hero-banner__hook p {
-  @apply max-w-4xl text-5xl font-normal uppercase leading-[0.9] text-white sm:text-7xl lg:text-8xl xl:text-[9rem];
-  font-family: "EPILONION SERIF DEMO", Georgia, serif;
-  text-shadow: 0 16px 56px rgba(17, 16, 13, 0.38);
-}
-
-.hero-banner__hook em,
-.hero-banner__hook span {
-  @apply font-normal italic;
-  font-family: inherit;
-  font-style: italic;
-}
-
-.hero-banner__end-fade {
-  @apply pointer-events-none absolute inset-0 z-20 bg-[#F4EBE6] opacity-0 transition-opacity duration-300 ease-linear;
-}
-
-@media (max-width: 640px) {
-  .hero-banner {
-    height: var(--hero-scroll-height-mobile);
-  }
+.hero-banner__image {
+  @apply h-full w-full object-cover object-center;
 }

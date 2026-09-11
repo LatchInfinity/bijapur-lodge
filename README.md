@@ -29,33 +29,16 @@ Build for Hostinger under `https://thezari.co.in/bijapur-lodge/`:
 npm run build:hostinger
 ```
 
-## Hero Frames
+## Hero Image
 
-The hero uses a scroll-synced image sequence:
+The hero uses one static frame for desktop and one static frame for mobile:
 
 ```text
-assets/pc-frames/frame_001.jpg
 assets/pc-frames/frame_002.jpg
-assets/pc-frames/frame_003.jpg
-```
-
-The frame naming and scroll settings are configured in:
-
-```text
-src/config/frameSequence.config.js
-```
-
-Desktop currently reads frames from `assets/pc-frames`. JPG, JPEG, PNG, and WebP frame files are supported. Mobile-specific frames can be added later with a separate config/source set.
-
-Mobile hero frames are read from:
-
-```text
-assets/mobile-frames/frame_001.jpg
 assets/mobile-frames/frame_002.jpg
-assets/mobile-frames/frame_003.jpg
 ```
 
-The hero switches to the mobile frame sequence at the configured mobile media query in `src/config/frameSequence.config.js`.
+The hero image source is configured directly in `src/sections/HeroBanner/HeroBanner.jsx`.
 
 ## Booking To Google Sheets
 

@@ -1,6 +1,19 @@
+import { useEffect } from "react";
 import "./ThankYouPage.css";
 
-export default function ThankYouPage({ homeHref, onBack }) {
+export default function ThankYouPage({ redirectDelay = 3000, redirectUrl }) {
+  useEffect(() => {
+    if (!redirectUrl) {
+      return undefined;
+    }
+
+    const redirectTimer = window.setTimeout(() => {
+      window.location.assign(redirectUrl);
+    }, redirectDelay);
+
+    return () => window.clearTimeout(redirectTimer);
+  }, [redirectDelay, redirectUrl]);
+
   return (
     <main className="thank-you-page">
       <section className="thank-you-page__content page-gutter" aria-labelledby="thank-you-heading">
@@ -9,18 +22,8 @@ export default function ThankYouPage({ homeHref, onBack }) {
           Thank you.
         </h1>
         <p className="thank-you-page__copy">
-          We will reach out to you shortly.
+          Redirecting you to complete your booking.
         </p>
-        <a
-          className="thank-you-page__link"
-          href={homeHref}
-          onClick={(event) => {
-            event.preventDefault();
-            onBack?.();
-          }}
-        >
-          Back to Home
-        </a>
       </section>
     </main>
   );

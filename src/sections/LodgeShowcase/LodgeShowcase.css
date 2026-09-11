@@ -1,14 +1,9 @@
 .lodge-showcase {
-  @apply relative bg-[#F4EBE6];
-  height: var(--lodge-showcase-height);
-}
-
-.lodge-showcase__sticky {
-  @apply sticky top-0 h-[100svh] min-h-[100svh] overflow-hidden bg-[#F4EBE6];
+  @apply relative bg-[#F4EBE6] py-20 sm:py-24;
 }
 
 .lodge-showcase__header {
-  @apply pointer-events-none absolute left-0 right-0 top-0 z-10 pt-20 sm:pt-24;
+  @apply relative z-10 mb-8 sm:mb-10;
 }
 
 .lodge-showcase__header p {
@@ -16,11 +11,21 @@
 }
 
 .lodge-showcase__viewport {
-  @apply h-full w-full overflow-hidden;
+  @apply w-full overflow-x-auto overflow-y-hidden px-4 outline-none sm:px-8 lg:px-12;
+  scrollbar-width: none;
+  scroll-behavior: auto;
+}
+
+.lodge-showcase__viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.lodge-showcase__viewport:focus-visible {
+  @apply ring-2 ring-lodge-ink/25 ring-offset-4 ring-offset-[#F4EBE6];
 }
 
 .lodge-showcase__track {
-  @apply flex h-full w-max items-center gap-4 px-4 pb-8 pt-16 will-change-transform sm:gap-7 sm:px-8 sm:pb-0 sm:pt-20 lg:gap-9 lg:px-12;
+  @apply flex w-max items-center gap-4 pb-2 sm:gap-7 lg:gap-9;
 }
 
 .lodge-showcase__card {
@@ -33,10 +38,4 @@
 
 .lodge-showcase__card:hover .lodge-showcase__image {
   @apply scale-[1.035];
-}
-
-@media (max-width: 640px) {
-  .lodge-showcase {
-    height: var(--lodge-showcase-height-mobile);
-  }
 }

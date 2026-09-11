@@ -1,7 +1,6 @@
 export const LODGE_GALLERY_CONFIG = {
-  scrollHeight: "420svh",
-  mobileScrollHeight: "360svh",
   sectionLabel: "VIEWS YOU CHERISH",
+  autoScrollSpeed: 72,
 };
 
 const imageModules = import.meta.glob("../../assets/lodges/*.{jpg,jpeg,png,webp}", {

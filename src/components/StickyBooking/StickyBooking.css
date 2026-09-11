@@ -6,22 +6,14 @@
   @apply translate-y-full opacity-0;
 }
 
-.sticky-booking__launcher {
-  @apply pointer-events-auto mx-auto flex min-h-[4.125rem] w-full max-w-5xl items-center justify-center rounded-md border border-lodge-ink/15 bg-[#E0D5CE] px-7 text-sm font-semibold uppercase tracking-[0.14em] text-lodge-ink shadow-2xl transition duration-500 hover:bg-[#F4EBE6];
-}
-
-.sticky-booking--open .sticky-booking__launcher {
-  @apply pointer-events-none translate-y-4 opacity-0;
-}
-
 .sticky-booking__panel {
-  @apply pointer-events-none mx-auto grid w-full max-w-5xl translate-y-5 gap-3 overflow-hidden rounded-t-lg border-0 border-lodge-ink/15 bg-[#E0D5CE]/95 p-0 opacity-0 shadow-2xl backdrop-blur-xl transition-all duration-500;
-  max-height: 0;
+  @apply pointer-events-auto mx-auto grid w-full max-w-5xl translate-y-0 gap-3 overflow-hidden rounded-t-lg border border-b-0 border-lodge-ink/15 bg-[#E0D5CE]/95 p-2.5 opacity-100 shadow-2xl backdrop-blur-xl transition-all duration-500;
+  max-height: min(calc(100svh - 0.75rem), 28rem);
 }
 
-.sticky-booking--open .sticky-booking__panel {
-  @apply pointer-events-auto translate-y-0 border border-b-0 p-2.5 opacity-100;
-  max-height: min(calc(100svh - 0.75rem), 28rem);
+.sticky-booking:not(.sticky-booking--open) .sticky-booking__panel {
+  @apply border-0 bg-transparent p-0 shadow-none backdrop-blur-0;
+  gap: 0;
 }
 
 .sticky-booking__trap {
@@ -34,7 +26,7 @@
 }
 
 .sticky-booking__field {
-  @apply relative grid gap-2 rounded-md border border-lodge-ink/10 bg-lodge-linen/45 p-4 transition-all duration-500 ease-out;
+  @apply relative grid gap-2 rounded-md border border-lodge-ink/10 bg-lodge-linen/45 p-3 transition-all duration-500 ease-out;
 }
 
 .sticky-booking__field label {
@@ -66,23 +58,19 @@
   @apply h-12 min-h-12 rounded-md bg-lodge-linen px-6 text-sm font-semibold uppercase tracking-[0.14em] text-lodge-ink transition hover:bg-[#F4EBE6] disabled:cursor-not-allowed disabled:opacity-40 sm:min-w-32;
 }
 
-.sticky-booking__field--phone,
-.sticky-booking__submit {
+.sticky-booking:not(.sticky-booking--open) .sticky-booking__close,
+.sticky-booking:not(.sticky-booking--open) .sticky-booking__field,
+.sticky-booking__field--phone {
+  border-width: 0;
   max-height: 0;
   opacity: 0;
   overflow: hidden;
   pointer-events: none;
-  transform: translateY(1rem);
+  transform: translateY(0.75rem);
 }
 
+.sticky-booking:not(.sticky-booking--open) .sticky-booking__field,
 .sticky-booking__field--phone {
-  padding-bottom: 0;
-  padding-top: 0;
-}
-
-.sticky-booking__submit {
-  height: 0;
-  min-height: 0;
   padding-bottom: 0;
   padding-top: 0;
 }
@@ -104,23 +92,12 @@
   transform: translateY(0);
 }
 
-.sticky-booking--step-ready .sticky-booking__submit {
-  height: 3rem;
-  max-height: 4rem;
-  min-height: 3rem;
-  opacity: 1;
-  padding-bottom: 0;
-  padding-top: 0;
-  pointer-events: auto;
-  transform: translateY(0);
-}
-
 .sticky-booking__error {
   @apply rounded-md border border-red-900/20 bg-red-900/10 px-4 py-3 text-sm font-medium text-red-950;
 }
 
 @media (max-width: 639px) {
-  .sticky-booking__close {
+  .sticky-booking--open .sticky-booking__close {
     @apply ml-auto flex h-10 w-10 items-center justify-center rounded-md border border-lodge-ink/15 bg-lodge-linen/45 text-sm font-semibold text-lodge-ink transition hover:bg-[#F4EBE6];
   }
 
@@ -148,10 +125,6 @@
     max-height: min(calc(100svh - 0.75rem), 30rem);
   }
 
-  .sticky-booking:not(.sticky-booking--open) .sticky-booking__panel {
-    max-height: 0;
-  }
-
   .sticky-booking__submit {
     @apply sticky bottom-0;
   }
@@ -162,26 +135,88 @@
     @apply px-0;
   }
 
-  .sticky-booking__launcher {
-    @apply hidden;
+  .sticky-booking__panel {
+    @apply max-w-none items-stretch gap-3 rounded-none border border-x-0 border-b-0 border-lodge-ink/10 p-3;
+    clip-path: inset(0 0 0 calc(100% - 13.5rem));
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 12rem;
+    max-height: none;
+    opacity: 1;
+    transform: none;
+    transform-origin: bottom right;
+    transition: clip-path 640ms cubic-bezier(0.22, 1, 0.36, 1), opacity 160ms ease;
   }
 
-  .sticky-booking__panel {
-    @apply pointer-events-auto max-w-none translate-y-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-stretch gap-4 rounded-none border border-x-0 border-b-0 border-lodge-ink/10 p-4 opacity-100 transition-none;
+  .sticky-booking:not(.sticky-booking--open) .sticky-booking__panel {
+    @apply border-0 bg-transparent p-0 shadow-none backdrop-blur-0;
+    clip-path: inset(0 0 0 calc(100% - 12rem));
+    gap: 0;
+  }
+
+  .sticky-booking--open .sticky-booking__panel {
+    clip-path: inset(0);
     max-height: none;
+    opacity: 1;
+  }
+
+  .sticky-booking__field input {
+    @apply h-8;
   }
 
   .sticky-booking__field,
   .sticky-booking__submit {
-    @apply transition-none;
+    @apply transition-all duration-500 ease-out;
     height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
 
-  .sticky-booking__field--phone,
-  .sticky-booking__submit,
-  .sticky-booking--step-phone .sticky-booking__field--phone,
-  .sticky-booking--step-ready .sticky-booking__field--phone,
-  .sticky-booking--step-ready .sticky-booking__submit {
+  .sticky-booking:not(.sticky-booking--open) .sticky-booking__field--name,
+  .sticky-booking:not(.sticky-booking--open) .sticky-booking__field--phone {
+    border-width: 1px;
+    max-height: none;
+    opacity: 0;
+    padding: 0.75rem 1rem;
+    transform: translateX(3rem);
+  }
+
+  .sticky-booking--open .sticky-booking__field--name,
+  .sticky-booking--open .sticky-booking__field--phone {
+    border-width: 1px;
+    max-height: 5rem;
+    opacity: 1;
+    overflow: hidden;
+    padding: 0.5rem 1rem;
+    pointer-events: auto;
+    transform: translateX(0);
+  }
+
+  .sticky-booking--open .sticky-booking__field--name {
+    transition-delay: 80ms;
+  }
+
+  .sticky-booking--open .sticky-booking__field--phone {
+    transition-delay: 140ms;
+  }
+
+  .sticky-booking__field--name {
+    @apply bg-lodge-linen/45;
+    max-height: 5rem;
+    opacity: 1;
+    overflow: hidden;
+    pointer-events: auto;
+    transform: none;
+  }
+
+  .sticky-booking__field--phone {
+    max-height: 5rem;
+    opacity: 1;
+    overflow: hidden;
+    pointer-events: auto;
+    transform: none;
+  }
+
+  .sticky-booking__submit {
     max-height: none;
     opacity: 1;
     overflow: visible;
@@ -190,11 +225,26 @@
   }
 
   .sticky-booking__field--phone {
-    padding: 1rem;
+    padding: 0.5rem 1rem;
   }
 
   .sticky-booking__submit {
-    @apply min-h-24 px-8;
+    @apply min-h-20 rounded-none rounded-tl-md px-8;
+  }
+
+  .sticky-booking__submit,
+  .sticky-booking--step-ready .sticky-booking__submit {
+    height: auto;
+    min-height: 5rem;
+    min-width: 12rem;
+    width: 12rem;
+    max-height: none;
+    opacity: 1;
+    align-self: stretch;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    pointer-events: auto;
+    transform: none;
   }
 
   .sticky-booking__error {
