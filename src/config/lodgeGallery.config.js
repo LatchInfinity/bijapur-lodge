@@ -1,7 +1,9 @@
 export const LODGE_GALLERY_CONFIG = {
   sectionLabel: "Glimpses of Jawai",
   sectionIntro:
-    "Among Jawai's ancient granite hills and still lakes — leopard country, shared with Rabari herders — Bijapur Lodge is a quiet base for safaris, sunsets, and slow wilderness days.",
+    "Among Jawai’s ancient granite hills and still waters, life moves at its own pace. Leopards share the landscape with Rabari herders, and the days unfold through quiet safaris, open skies and unhurried moments in the wild.",
+  sectionIntroSecond:
+    "Bijapur Lodge by Zari offers an intimate way to experience it all - quietly and at your own rhythm.",
   autoScrollSpeed: 72,
 };
 
