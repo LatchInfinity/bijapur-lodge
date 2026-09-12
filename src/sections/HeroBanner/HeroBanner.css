@@ -2,10 +2,47 @@
   @apply relative z-10 min-h-[100svh] overflow-hidden bg-[#e0d5ce] px-2 sm:px-3 lg:px-4;
 }
 
-.hero-banner__picture {
-  @apply block h-[100svh] min-h-[100svh] w-full;
+.hero-banner__media {
+  @apply relative block h-[100svh] min-h-[100svh] w-full overflow-hidden;
 }
 
-.hero-banner__image {
-  @apply h-full w-full object-cover object-center;
+.hero-banner__video-wrap {
+  @apply absolute inset-0 overflow-hidden;
+  margin-top: 1rem;
+}
+
+.hero-banner__video {
+  @apply pointer-events-none absolute left-1/2 top-1/2;
+  width: max(100%, 177.78vh);
+  height: max(100%, 56.25vw);
+  transform: translate(-50%, -50%);
+  border: 0;
+}
+
+/* ── Mobile: fit the whole video frame ──────────────────── */
+
+@media (max-width: 639px) {
+  .hero-banner {
+    min-height: 0;
+    padding-top: 4.5rem;
+    padding-right: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+  }
+
+  .hero-banner__media {
+    height: auto;
+    min-height: 0;
+  }
+
+  .hero-banner__video-wrap {
+    position: relative;
+    aspect-ratio: 16 / 9;
+  }
+
+  .hero-banner__video {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+  }
 }
