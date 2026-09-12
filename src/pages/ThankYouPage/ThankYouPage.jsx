@@ -1,17 +1,54 @@
 import { useEffect } from "react";
+import { isMetaPixelEnabled, trackMetaBookButton } from "../../services/metaPixel.js";
 import "./ThankYouPage.css";
 
+const PIXEL_FLUSH_WAIT_MS = 1200;
+const PIXEL_POLL_INTERVAL_MS = 150;
+const PIXEL_MAX_EXTRA_WAIT_MS = 2000;
+
+const hasPixelLibraryLoaded = () => (
+  typeof window !== "undefined" && typeof window.fbq?.callMethod === "function"
+);
+
 export default function ThankYouPage({ redirectDelay = 3000, redirectUrl }) {
+  useEffect(() => {
+    trackMetaBookButton();
+  }, []);
+
   useEffect(() => {
     if (!redirectUrl) {
       return undefined;
     }
 
-    const redirectTimer = window.setTimeout(() => {
-      window.location.assign(redirectUrl);
-    }, redirectDelay);
+    const timers = [];
+    let hasRedirected = false;
 
-    return () => window.clearTimeout(redirectTimer);
+    const redirect = () => {
+      if (hasRedirected) {
+        return;
+      }
+
+      hasRedirected = true;
+      timers.forEach((timer) => window.clearTimeout(timer));
+      window.location.assign(redirectUrl);
+    };
+
+    const waitForPixelFlush = () => {
+      if (!isMetaPixelEnabled() || hasPixelLibraryLoaded()) {
+        timers.push(window.setTimeout(redirect, isMetaPixelEnabled() ? PIXEL_FLUSH_WAIT_MS : 0));
+        return;
+      }
+
+      timers.push(window.setTimeout(waitForPixelFlush, PIXEL_POLL_INTERVAL_MS));
+    };
+
+    timers.push(window.setTimeout(waitForPixelFlush, redirectDelay));
+    timers.push(window.setTimeout(redirect, redirectDelay + PIXEL_MAX_EXTRA_WAIT_MS));
+
+    return () => {
+      hasRedirected = true;
+      timers.forEach((timer) => window.clearTimeout(timer));
+    };
   }, [redirectDelay, redirectUrl]);
 
   return (

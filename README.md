@@ -100,6 +100,6 @@ Add your Meta Pixel ID before building:
 VITE_META_PIXEL_ID=your-meta-pixel-id
 ```
 
-The app loads Meta Pixel when this value exists. It tracks `PageView` on the landing page and thank-you page, and tracks `Lead` once after a booking is saved successfully.
+The app loads Meta Pixel when this value exists. It tracks `PageView` once on the landing page, and tracks `Lead` once per session when the thank-you page is shown after a successful booking. The redirect to the booking engine waits until the pixel library has flushed the `Lead` (with a timeout backstop, so visitors with blockers are never stranded).
 
 For GitHub Pages, add `VITE_META_PIXEL_ID` as a repository variable before deploying. For Hostinger, put it in the local `.env` used before `npm run build`.

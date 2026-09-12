@@ -2,12 +2,17 @@ const META_PIXEL_ID = import.meta.env.VITE_META_PIXEL_ID;
 const META_PIXEL_SCRIPT_ID = "meta-pixel-script";
 
 let isInitialized = false;
+let hasTrackedLead = false;
 
 const canUsePixel = () => (
   Boolean(META_PIXEL_ID) && typeof window !== "undefined" && typeof document !== "undefined"
 );
 
 const getFbq = () => window.fbq;
+
+export function isMetaPixelEnabled() {
+  return canUsePixel();
+}
 
 export function initializeMetaPixel() {
   if (!canUsePixel() || isInitialized) {
@@ -58,10 +63,11 @@ export function trackMetaPageView(pageName) {
 }
 
 export function trackMetaBookButton() {
-  if (!canUsePixel()) {
+  if (!canUsePixel() || hasTrackedLead) {
     return;
   }
 
+  hasTrackedLead = true;
   initializeMetaPixel();
   getFbq()("track", "Lead", {
     content_name: "Bijapur Lodge Book Button",

@@ -4,7 +4,7 @@ import Footer from "../components/Footer/Footer.jsx";
 import HeroBanner from "../sections/HeroBanner/HeroBanner.jsx";
 import LodgeShowcase from "../sections/LodgeShowcase/LodgeShowcase.jsx";
 import ThankYouPage from "../pages/ThankYouPage/ThankYouPage.jsx";
-import { initializeMetaPixel, trackMetaBookButton, trackMetaPageView } from "../services/metaPixel.js";
+import { initializeMetaPixel, trackMetaPageView } from "../services/metaPixel.js";
 import "./App.css";
 
 const ROUTE_TRANSITION_DURATION = 420;
@@ -51,7 +51,6 @@ const redirectRestrictedThankYouRoute = () => {
 export default function App() {
   const transitionTimeoutRef = useRef(null);
   const transitionFrameRef = useRef(null);
-  const hasTrackedLeadRef = useRef(false);
   const hasTrackedLandingPageRef = useRef(false);
   const [activePage, setActivePage] = useState(getPageFromLocation);
   const [transitionState, setTransitionState] = useState("entered");
@@ -145,11 +144,6 @@ export default function App() {
       || !bookingResult?.bookingId
     ) {
       return;
-    }
-
-    if (!hasTrackedLeadRef.current) {
-      hasTrackedLeadRef.current = true;
-      trackMetaBookButton();
     }
 
     transitionToPage(THANK_YOU_PAGE, {
