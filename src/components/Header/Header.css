@@ -1,5 +1,5 @@
 .site-header {
-  @apply fixed left-0 right-0 top-0 z-50 bg-[#E0D5CE]/80 py-5 shadow-header backdrop-blur-xl transition-all duration-300 sm:py-6;
+  @apply fixed left-0 right-0 top-0 z-50 bg-[#E0D5CE] py-5 shadow-header backdrop-blur-xl transition-all duration-300 sm:py-6;
 }
 
 .site-header--scrolled {
