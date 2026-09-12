@@ -167,6 +167,7 @@ export default function LodgeShowcase() {
       <div className="lodge-showcase__header page-gutter">
         <p id="lodge-showcase-heading" className="lodge-showcase__title">{LODGE_GALLERY_CONFIG.sectionLabel}</p>
         <p className="lodge-showcase__intro">{LODGE_GALLERY_CONFIG.sectionIntro}</p>
+        <p className="lodge-showcase__intro">{LODGE_GALLERY_CONFIG.sectionIntroSecond}</p>
       </div>
 
       <div
