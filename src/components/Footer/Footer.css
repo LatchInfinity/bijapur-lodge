@@ -12,7 +12,7 @@
 
 .site-footer__brand {
   @apply text-2xl font-normal uppercase no-underline sm:text-3xl;
-  color: #1e1211;
+  color: #112616;
   font-family: "EPILONION SERIF DEMO", "Cormorant Garamond", Georgia, serif;
   font-feature-settings: "liga" 1, "dlig" 1, "calt" 1;
   font-variant-ligatures: common-ligatures discretionary-ligatures contextual;
