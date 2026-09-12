@@ -7,7 +7,7 @@
 }
 
 .lodge-showcase__title {
-  @apply font-display text-lg font-medium normal-case leading-snug tracking-normal text-lodge-ink/75 sm:text-xl lg:text-2xl;
+  @apply font-display text-xl font-medium normal-case leading-snug tracking-normal text-lodge-ink/75 sm:text-xl lg:text-2xl;
 }
 
 .lodge-showcase__intro {
