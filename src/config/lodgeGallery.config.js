@@ -1,5 +1,7 @@
 export const LODGE_GALLERY_CONFIG = {
-  sectionLabel: "VIEWS YOU CHERISH",
+  sectionLabel: "Glimpses of Jawai",
+  sectionIntro:
+    "Among Jawai's ancient granite hills and still lakes — leopard country, shared with Rabari herders — Bijapur Lodge is a quiet base for safaris, sunsets, and slow wilderness days.",
   autoScrollSpeed: 72,
 };
 

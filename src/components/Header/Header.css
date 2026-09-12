@@ -1,13 +1,13 @@
 .site-header {
-  @apply fixed left-0 right-0 top-0 z-50 bg-[#E0D5CE]/80 py-3 shadow-header backdrop-blur-xl transition-all duration-300 sm:py-4;
+  @apply fixed left-0 right-0 top-0 z-50 bg-[#E0D5CE]/80 py-5 shadow-header backdrop-blur-xl transition-all duration-300 sm:py-6;
 }
 
 .site-header--scrolled {
-  @apply py-2 sm:py-3;
+  @apply py-3 sm:py-4;
 }
 
 .site-header--scrolled .site-header__brand {
-  color: #1e1211;
+  color: #112616;
 }
 
 .site-header__inner {
@@ -16,7 +16,7 @@
 
 .site-header__brand {
   @apply inline-flex min-w-0 items-center no-underline;
-  color: #1e1211;
+  color: #112616;
 }
 
 .site-header__brand-text {
@@ -26,10 +26,12 @@
   font-variant-ligatures: common-ligatures discretionary-ligatures contextual;
   letter-spacing: 0;
   line-height: 0.85;
+  position: relative;
+  top: 0.06em;
 }
 
 .site-header__book-btn {
-  @apply rounded-none bg-[#1e1211]/95 px-5 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white transition hover:bg-lodge-charcoal;
+  @apply rounded-none bg-[#112616]/95 px-5 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white transition hover:bg-[#112616];
   font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
@@ -52,7 +54,7 @@
 }
 
 .header-booking__sheet {
-  @apply flex w-full max-w-md flex-col gap-0 border-b border-lodge-ink/10 bg-[#E0D5CE]/95 px-2 pb-4 pt-4 shadow-header backdrop-blur-xl;
+  @apply flex w-full max-w-md flex-col gap-0 border-b border-lodge-ink/10 bg-[#DCD1CC]/95 px-2 pb-4 pt-4 shadow-header backdrop-blur-xl;
   border-radius: 0 0 0.75rem 0.75rem;
 }
 

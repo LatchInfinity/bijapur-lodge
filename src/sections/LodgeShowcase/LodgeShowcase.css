@@ -6,8 +6,12 @@
   @apply relative z-10 mb-8 sm:mb-10;
 }
 
-.lodge-showcase__header p {
-  @apply font-sans text-xl font-normal uppercase leading-none tracking-[0.08em] text-lodge-ink/75 sm:text-3xl sm:tracking-[0.1em] lg:text-4xl;
+.lodge-showcase__title {
+  @apply font-display text-lg font-medium normal-case leading-snug tracking-normal text-lodge-ink/75 sm:text-xl lg:text-2xl;
+}
+
+.lodge-showcase__intro {
+  @apply mt-3 max-w-xl font-display text-sm font-normal leading-relaxed text-lodge-ink/65 sm:mt-4 sm:text-base;
 }
 
 .lodge-showcase__viewport {
@@ -25,11 +29,11 @@
 }
 
 .lodge-showcase__track {
-  @apply flex w-max items-center gap-4 pb-2 sm:gap-7 lg:gap-9;
+  @apply flex w-max items-center gap-1 pb-2 sm:gap-1.5 lg:gap-2;
 }
 
 .lodge-showcase__card {
-  @apply relative h-[62svh] min-h-[22rem] w-[84vw] shrink-0 overflow-hidden rounded-lg bg-[#F4EBE6] sm:h-[72svh] sm:min-h-0 sm:w-[58vw] lg:w-[42vw] xl:w-[36vw];
+  @apply relative h-[62svh] min-h-[22rem] w-[calc(100vw-2rem)] shrink-0 overflow-hidden rounded-none bg-[#F4EBE6] sm:h-[72svh] sm:min-h-0 sm:w-[calc(100vw-4rem)] lg:w-[42vw] xl:w-[36vw];
 }
 
 .lodge-showcase__image {
@@ -38,4 +42,30 @@
 
 .lodge-showcase__card:hover .lodge-showcase__image {
   @apply scale-[1.035];
+}
+
+/* ── PC: text left, gallery right (Aman-style) ───────────── */
+
+@media (min-width: 1024px) {
+  .lodge-showcase {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    align-items: start;
+    gap: 2rem;
+  }
+
+  .lodge-showcase__header {
+    margin-bottom: 0;
+    padding-right: 0;
+  }
+
+  .lodge-showcase__viewport {
+    min-width: 0;
+    padding-left: 0;
+    padding-right: 3rem;
+  }
+
+  .lodge-showcase .lodge-showcase__card {
+    width: 40rem;
+  }
 }
